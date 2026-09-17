@@ -1,4 +1,4 @@
-[segment MBR start=0x0000000000000000 vstart=0x0000000000007C00]
+[section .MBR]
 [bits 16]
 MBR:
 MBR.Code:
@@ -89,7 +89,7 @@ MBR.Partitions:
     ;Boot flag
     db 0x55, 0xAA
 
-[segment Loader start=0x0000000000000200 vstart=0x0000000000008000]
+[section .Loader]
 [bits 16]
 Loader.Entry16:
     ;Enable address bit 20
@@ -216,7 +216,10 @@ Loader.Entry64:
     mov al, "F"
     mov ah, 0x0F
     mov [0x00000000000B8000], ax
+    call Main
     jmp $
+
+    extern Main
 
 align 4096, db 0x00
 
@@ -270,6 +273,3 @@ Loader.Message.NoProtectedMode: db 0x0F, "Protected mode not supported!", 0x00
 Loader.Message.NoCpuid: db 0x0F, "CPUID not supported!", 0x00
 Loader.Message.NoLongMode: db 0x0F, "Long mode not supported!", 0x00
 Loader.Message.NoMSR: db 0x0F, "MSRs not supported!", 0x00
-
-Loader.Padding:
-times 0x80000-0x200-($-$$) db 0x00 ;Padding
