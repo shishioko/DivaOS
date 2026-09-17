@@ -1,0 +1,5 @@
+{
+    "nasm.extraFlags": [
+        "${workspaceFolder}/Source"
+    ]
+}
