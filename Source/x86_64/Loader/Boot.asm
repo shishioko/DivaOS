@@ -129,7 +129,7 @@ Loader.Entry16:
     jmp Loader.GDTR.Code32:Loader.Entry32
 
 [bits 32]
-%include "Loader/Terminal32.asm"
+%include "/Loader/Terminal32.asm"
 Loader.Entry32:
     ;Initialize execution
     mov esp, 0x00007000
