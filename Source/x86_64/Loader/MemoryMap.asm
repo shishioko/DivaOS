@@ -13,11 +13,11 @@ DivaOS.Loader.MemoryMap.Map:
     mov es, ax
     xor ebx, ebx
     mov edx, dword 0x534D4150
-    mov edi, [DivaOS.Loader.Heap.Offset]
+    mov edi, [DivaOS.Loader.LoaderMemory.Offset]
     add edi, 4
     mov [DivaOS.Loader.MemoryMap.Start], edi
     DivaOS.Loader.MemoryMap.Map.Iterate:
-        mov ecx, 24
+        mov ecx, 20
         mov eax, 0xE820
         add edi, 4
         mov [edi-4], dword 0
@@ -29,7 +29,7 @@ DivaOS.Loader.MemoryMap.Map:
         add edi, ecx
         cmp ebx, 0
         jnz DivaOS.Loader.MemoryMap.Map.Iterate
-    mov [dword DivaOS.Loader.Heap.Offset], edi
+    mov [dword DivaOS.Loader.LoaderMemory.Offset], edi
 
     ;todo: make a table of pointers (exclude unusable and current area)
     ;todo: sort that table

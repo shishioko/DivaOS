@@ -2,6 +2,8 @@
 
 using t8  = char;
 
+using u1  = bool;
+
 using u8  = unsigned char;
 using s8  = signed char;
 
@@ -10,13 +12,15 @@ using s16 = signed short;
 
 using u32 = unsigned int;
 using s32 = signed int;
-using f32 = float;
 
 using u64 = unsigned long long;
 using s64 = signed long long;
-using f64 = double;
 
+using f32 = float;
+using f64 = double;
 using f80 = long double;
+
+#define v volatile
 
 #ifdef __SIZEOF_INT128__
 using u128 = unsigned __int128;

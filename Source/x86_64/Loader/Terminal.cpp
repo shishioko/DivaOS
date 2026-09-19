@@ -12,24 +12,24 @@ namespace DivaOS{
                     ColorMask = colorMask;
                 }
 
-                void operator=(const VGACharacter& b) volatile {
+                void operator=(const VGACharacter& b) v {
                     this->Character = b.Character;
                     this->ColorMask = b.ColorMask;
                 }
-                void operator=(const volatile VGACharacter& b) volatile {
+                void operator=(const v VGACharacter& b) v {
                     this->Character = b.Character;
                     this->ColorMask = b.ColorMask;
                 }
             };
             
-            volatile VGACharacter* VGA = (volatile VGACharacter*) 0x00000000000B8000;
+            v VGACharacter* VGA = (v VGACharacter*) 0x00000000000B8000;
             const u16 Width = 80;
             const u16 Height = 25;
             u16 Y = 0;
             u16 X = 0;
 
             static const void ScrollUp(u16 y);
-            static inline volatile VGACharacter* CalculateAddress(u16 x, u16 y);
+            static inline v VGACharacter* CalculateAddress(u16 x, u16 y);
 
             void Write(const t8* text){
                 for (u64 i = 0; text[i] != '\0'; i++) {
@@ -75,7 +75,7 @@ namespace DivaOS{
                         break;
                     }
                     default:{
-                        volatile VGACharacter* vga = CalculateAddress(X, Y);
+                        v VGACharacter* vga = CalculateAddress(X, Y);
                         vga[0] = VGACharacter(character);
                         X++;
                         if (X == Width){
@@ -92,15 +92,15 @@ namespace DivaOS{
             static const void ScrollUp(u16 y){
                 Y -= y;
                 for (u16 line = y; line < Height; line++){
-                    volatile VGACharacter* destination = CalculateAddress(0, line - y);
-                    volatile VGACharacter* source = CalculateAddress(0, line);
+                    v VGACharacter* destination = CalculateAddress(0, line - y);
+                    v VGACharacter* source = CalculateAddress(0, line);
                     for (u16 i = 0; i < Width; i++){
                         destination[i] = source[i];
                         source[i] = VGACharacter(' ', 0x00);
                     }
                 }
             }
-            static inline volatile VGACharacter* CalculateAddress(u16 x, u16 y){
+            static inline v VGACharacter* CalculateAddress(u16 x, u16 y){
                 return &VGA[y * Width + x];
             }
         }

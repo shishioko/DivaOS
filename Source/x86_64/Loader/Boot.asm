@@ -154,13 +154,13 @@ DivaOS.Loader.Entry64:
     mov rbx, Main
     call rbx
 
-    lea rdi, [rel DivaOS.Loader.Message.NoProtectedMode]
-    call DivaOS.DivaOS.Loader.Terminal.Write_t8p
+    lea rdi, [rel DivaOS.Loader.Message.LoaderReturn]
+    call DivaOS.Loader.Terminal.Write_t8p
 
     jmp $
 
     extern Main
-    extern DivaOS.DivaOS.Loader.Terminal.Write_t8p
+    extern DivaOS.Loader.Terminal.Write_t8p
 
 [section .rodata]
 
@@ -224,11 +224,18 @@ DivaOS.Loader.Message.NoProtectedMode: db "Protected mode not supported!", 0x00
 DivaOS.Loader.Message.NoCpuid: db "CPUID not supported!", 0x00
 DivaOS.Loader.Message.NoLongMode: db "Long mode not supported!", 0x00
 DivaOS.Loader.Message.NoMSR: db "MSRs not supported!", 0x00
+DivaOS.Loader.Message.LoaderReturn: db "Loader exited!", 0x00
 
 [section .data]
 
-DivaOS.Loader.Heap.Offset: dq DivaOS.Loader.Heap.Start
+global DivaOS.Loader.LoaderMemory.Start
+DivaOS.Loader.LoaderMemory.Start: dq DivaOS.Loader.LoaderMemory.Memory.Start
+global DivaOS.Loader.LoaderMemory.Offset
+DivaOS.Loader.LoaderMemory.Offset: dq DivaOS.Loader.LoaderMemory.Memory.Start
+global DivaOS.Loader.LoaderMemory.End
+DivaOS.Loader.LoaderMemory.End: dq DivaOS.Loader.LoaderMemory.Memory.End
 
 [section .bss]
 
-DivaOS.Loader.Heap.Start:
+DivaOS.Loader.LoaderMemory.Memory.Start:
+DivaOS.Loader.LoaderMemory.Memory.End equ 0x9FFFF

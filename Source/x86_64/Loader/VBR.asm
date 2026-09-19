@@ -12,16 +12,27 @@ VBR.Code:
     mov es, ax
     mov di, ax
     
+    ;Save origin partition sector
     mov ax, [si + 8] 
     mov [VBR.Code.Sector], ax
     mov ax, [si + 10] 
     mov [VBR.Code.Sector + 2], ax
+    ;Save boot disk id
+    mov [VBR.Code.Disk], dl
 
-    mov [VBR.Code.Disk], dl ;Save bootdisk id
     sti ;Enable interrupts
+
     ;Set video mode
     mov ax, 0x0003
     int 0x10
+    ;Disable cursor
+    mov dx, 0x03D4
+    mov al, 0x0A
+    out dx, al
+    mov dx, 0x03D5
+    mov al, 0x20
+    out dx, al
+
     ;Load loader (127 sectors / 64KiB to 0x08000)
     VBR.Code.LoadLoader:
     mov eax, [VBR.Code.Sector] 

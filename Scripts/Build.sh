@@ -15,13 +15,13 @@ mkdir -p ./{Source,Build,Artifacts}
 cd ./Build/
 
 #Compile and link kernel
-g++ -mcmodel=kernel -ffreestanding -fno-exceptions -fno-rtti -fno-pic -fno-pie -mno-red-zone -c -I ../Source/x86_64/Kernel/ $(printf -- '-I %s ' ../Source/{x86_64,Any}/{Kernel,Shared}/) ../Source/{x86_64,Any}/{Kernel,Shared}/*.cpp
+g++ -mcmodel=kernel -ffreestanding -fno-exceptions -fno-rtti -fno-pic -fno-pie -mno-red-zone -Wno-pointer-arith -masm=intel -c -I ../Source/x86_64/Kernel/ $(printf -- '-I %s ' ../Source/{x86_64,Any}/{Kernel,Shared}/) ../Source/{x86_64,Any}/{Kernel,Shared}/*.cpp
 ld  -m elf_x86_64 -T ../Scripts/Kernel.ld -Map=./Kernel.map --oformat elf64-x86-64 -o ./Kernel.elf ./*.o
 objcopy -O binary ./Kernel.elf ./Kernel.bin
 rm -f ./*.o
 
 #Assemble and link loader
-g++ -mcmodel=small -ffreestanding -fno-exceptions -fno-rtti -fno-pic -fno-pie -mno-red-zone -c -I ../Source/x86_64/Loader/ $(printf -- '-I %s ' ../Source/{x86_64,Any}/{Loader,Shared}/) ../Source/{x86_64,Any}/{Loader,Shared}/*.cpp
+g++ -mcmodel=small -ffreestanding -fno-exceptions -fno-rtti -fno-pic -fno-pie -mno-red-zone -Wno-pointer-arith -masm=intel -c -I ../Source/x86_64/Loader/ $(printf -- '-I %s ' ../Source/{x86_64,Any}/{Loader,Shared}/) ../Source/{x86_64,Any}/{Loader,Shared}/*.cpp
 nasm -f elf64 -o ./Loader.asm.o $(printf -- '-I %s ' ../Source/{x86_64,Any}/{Loader,Shared}/) ../Source/Any/Loader/Main.asm
 ld -m elf_x86_64 -T ../Scripts/Loader.ld -Map=./Loader.map --oformat binary -o ./Loader.bin ./*.o
 rm -f ./*.o
