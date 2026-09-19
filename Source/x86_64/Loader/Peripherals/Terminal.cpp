@@ -4,30 +4,33 @@ namespace DivaOS{
     namespace Loader{
         namespace Peripherals{
             namespace Terminal{
-                struct VGACharacter{
-                    t8 Character;
-                    u8 ColorMask;
+                namespace name
+                {
+                    struct VGACharacter{
+                        t8 Character;
+                        u8 ColorMask;
 
-                    VGACharacter(t8 character, u8 colorMask = 0x0F){
-                        Character = character;
-                        ColorMask = colorMask;
-                    }
+                        VGACharacter(t8 character, u8 colorMask = 0x0F){
+                            Character = character;
+                            ColorMask = colorMask;
+                        }
 
-                    void operator=(const VGACharacter& b) v {
-                        this->Character = b.Character;
-                        this->ColorMask = b.ColorMask;
-                    }
-                    void operator=(const v VGACharacter& b) v {
-                        this->Character = b.Character;
-                        this->ColorMask = b.ColorMask;
-                    }
-                };
-                
-                v VGACharacter* VGA = (v VGACharacter*) 0x00000000000B8000;
-                const u16 Width = 80;
-                const u16 Height = 25;
-                u16 Y = 0;
-                u16 X = 0;
+                        void operator=(const VGACharacter& b) v {
+                            this->Character = b.Character;
+                            this->ColorMask = b.ColorMask;
+                        }
+                        void operator=(const v VGACharacter& b) v {
+                            this->Character = b.Character;
+                            this->ColorMask = b.ColorMask;
+                        }
+                    };
+                    
+                    v VGACharacter* VGA = (v VGACharacter*) 0x00000000000B8000;
+                    const u16 Width = 80;
+                    const u16 Height = 25;
+                    u16 Y = 0;
+                    u16 X = 0;
+                }
 
                 static const void ScrollUp(u16 y);
                 static inline v VGACharacter* CalculateAddress(u16 x, u16 y);

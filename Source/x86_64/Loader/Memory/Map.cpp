@@ -6,18 +6,18 @@
 #include "Peripherals/Terminal.hpp"
 
 namespace DivaOS::Loader::Memory::Map {
-    extern u64 E820MemoryMapLength asm("DivaOS.Loader.Memory.Map.Length");
-    extern E820MemoryMapEntry* E820MemoryMap asm("DivaOS.Loader.Memory.Map.Start");
+    namespace{
+        extern u64 E820MemoryMapLength asm("DivaOS.Loader.Memory.Map.Length");
+        extern E820MemoryMapEntry* E820MemoryMap asm("DivaOS.Loader.Memory.Map.Start");
 
-    AddressRange* Cached = null;
-
+        AddressRange* Cached = null;
+    }
     AddressRange* Get(){
         if (Cached != null) return Cached;
         u64 rawEntries = E820MemoryMapLength * 2;
         void** rawEntriesAddress = (void**)LoaderMemory::Acquire(sizeof(void*) * rawEntries);
         bool* rawEntriesUsable = (bool*)LoaderMemory::Acquire(sizeof(bool) * rawEntries);
         bool* rawEntriesStart = (bool*)LoaderMemory::Acquire(sizeof(bool) * rawEntries);
-        //Peripherals::Terminal::Write('0' + (const t8)E820MemoryMapLength);
         for (u64 i = 0; i < E820MemoryMapLength; i++){
             E820MemoryMapEntry entry = E820MemoryMap[i];
             bool usable = entry.Type == 1;

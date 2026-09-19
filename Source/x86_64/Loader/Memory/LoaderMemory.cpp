@@ -3,15 +3,17 @@
 #include "Loader.hpp"
 
 namespace DivaOS::Loader::Memory::LoaderMemory {
-    extern void* Start asm("DivaOS.Loader.Memory.LoaderMemory.Start");
-    extern void* Offset asm("DivaOS.Loader.Memory.LoaderMemory.Offset");
-    extern void* End asm("DivaOS.Loader.Memory.LoaderMemory.End");
-    struct MemoryMapSegment{
-        u64* Start;
-        u64* End;
-        u32 Type;
-        MemoryMapSegment* Next;
-    };
+    namespace{
+        extern void* Start asm("DivaOS.Loader.Memory.LoaderMemory.Start");
+        extern void* Offset asm("DivaOS.Loader.Memory.LoaderMemory.Offset");
+        extern void* End asm("DivaOS.Loader.Memory.LoaderMemory.End");
+        struct MemoryMapSegment{
+            u64* Start;
+            u64* End;
+            u32 Type;
+            MemoryMapSegment* Next;
+        };
+    }
 
     void* Acquire(u64 size, u8 alignment)
     {
