@@ -3,6 +3,8 @@
 
 [section .text]
 [bits 16]
+; Entry point of the stage 2 bootloader
+; Initializes and enters protected mode
 DivaOS.Loader.Loader.Entry16:
     ;Enable address bit 20
     mov dx, 0x0092
@@ -34,7 +36,6 @@ DivaOS.Loader.Loader.Entry16:
     ;Map memory
     DivaOS.Loader.Loader.Entry16.MemoryMap:
     call DivaOS.Loader.Memory.Map.Build
-    ;todo: return flag for error msg
     jmp DivaOS.Loader.Loader.Entry16.Load32
 
     ;Set up protected mode
@@ -47,6 +48,7 @@ DivaOS.Loader.Loader.Entry16:
     jmp DivaOS.Loader.Loader.GDTR.Code32:DivaOS.Loader.Loader.Entry32
 
 [bits 32]
+; Initializes and enters long mode
 DivaOS.Loader.Loader.Entry32:
     ;Initialize execution
     mov esp, 0x00007000
@@ -125,38 +127,45 @@ DivaOS.Loader.Loader.Entry32:
     ;Enter long mode
     jmp DivaOS.Loader.Loader.GDTR.Code64:DivaOS.Loader.Loader.Entry64
 
+    ; Prints an error message and halts execution
+    ; Input: esi = Pointer to messaage to be printed
     DivaOS.Loader.Loader.Entry32.Crash:
         mov edi, 0x000B8000
         mov ecx, 80
         cld
-        mov ah, 0x0F
-        DivaOS.Loader.Loader.Entry32.Print.Loop:
+        mov ah, 0x0F ;Set print color
+        ;Iterate string content
+        DivaOS.Loader.Loader.Entry32.Crash.Loop:
             lodsb
             stosw
             dec ecx
-            cmp al, 0x00
-            jnz DivaOS.Loader.Loader.Entry32.Print.Loop
-        add edi, ecx
-        add edi, ecx
+            cmp al, 0x00 ;Check for null terminator
+            jnz DivaOS.Loader.Loader.Entry32.Crash.Loop
+        ;Halt execution
         cli
         hlt
         jmp $
 [bits 64]
+; Initializes and enters C++ provided code
 DivaOS.Loader.Loader.Entry64:
     ;Initialize registers
-    ;mov rsp, 0x00007000
     mov ax, DivaOS.Loader.Loader.GDTR.Data64
     mov ds, ax
     mov es, ax
     mov gs, ax
     mov fs, ax
 
+    ;Call C++ code
     mov rbx, Main
     call rbx
 
+    ;Print message in case of unexpected return
     lea rdi, [rel DivaOS.Loader.Loader.Message.LoaderReturn]
     call DivaOS.Loader.Peripherals.Terminal.Write_t8p
 
+    ;Halt execution
+    cli
+    hlt
     jmp $
 
     extern Main
@@ -164,25 +173,26 @@ DivaOS.Loader.Loader.Entry64:
 
 [section .rodata]
 
+; Baked identity mapped page tables for entering long mode
 align 4096, db 0x00
-
-DivaOS.Loader.Loader.Paging.PML4:
-    dq DivaOS.Loader.Loader.Paging.PML3 + 00000011b ;R/W, Present
-    times 511 dq 0x0000000000000000
-DivaOS.Loader.Loader.Paging.PML3:
-    dq DivaOS.Loader.Loader.Paging.PML2 + 00000011b ;R/W, Present
-    times 511 dq 0x0000000000000000
-DivaOS.Loader.Loader.Paging.PML2:
-    dq 0x0000000000000000 + 10000011b ;2MB Pages, R/W, Present
-    times 511 dq 0x0000000000000000
-DivaOS.Loader.Loader.Paging.PML1.High:
-    %push
-    %assign Offset 0x0000000000018000
-    %rep 512
-        dq Offset + 00000011b ; R/W, Present
-        %assign Offset Offset + 0x1000
-    %endrep
-    %pop
+DivaOS.Loader.Loader.Paging:
+    DivaOS.Loader.Loader.Paging.PML4:
+        dq DivaOS.Loader.Loader.Paging.PML3 + 00000011b ;R/W, Present
+        times 511 dq 0x0000000000000000
+    DivaOS.Loader.Loader.Paging.PML3:
+        dq DivaOS.Loader.Loader.Paging.PML2 + 00000011b ;R/W, Present
+        times 511 dq 0x0000000000000000
+    DivaOS.Loader.Loader.Paging.PML2:
+        dq 0x0000000000000000 + 10000011b ;2MB Pages, R/W, Present
+        times 511 dq 0x0000000000000000
+    DivaOS.Loader.Loader.Paging.PML1.High:
+        %push
+        %assign Offset 0x0000000000018000
+        %rep 512
+            dq Offset + 00000011b ; R/W, Present
+            %assign Offset Offset + 0x1000
+        %endrep
+        %pop
 
 DivaOS.Loader.Loader.GDTR:
     dw 0x003f ;Size including nulldescriptor - 1
