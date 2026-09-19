@@ -8,8 +8,7 @@
 namespace DivaOS::Loader::Memory::Map {
     extern u64 E820MemoryMapLength asm("DivaOS.Loader.Memory.Map.Length");
     extern E820MemoryMapEntry* E820MemoryMap asm("DivaOS.Loader.Memory.Map.Start");
-    t8* convert_u64_to_hex_string(u64 value);
-    t8* convert_u8_to_hex_string(u8 value);
+
     AddressRange* Get(){
         u64 raw_entries = E820MemoryMapLength * 2;
         void** raw_entries_address = (void**)LoaderMemory::Acquire(sizeof(void*) * raw_entries);
@@ -77,60 +76,5 @@ namespace DivaOS::Loader::Memory::Map {
             processed_entries_range[processed_entries] = AddressRange::Null;
         }
         return processed_entries_range;
-    }
-
-    t8* convert_u64_to_hex_string(u64 value) {
-        const u64 buffer_size = 18; // 2 for "0x" + 16 for hex digits
-        
-        // Acquire memory allocation using the specified method
-        void* allocated_ptr = LoaderMemory::Acquire(buffer_size);
-        if (!allocated_ptr) {
-            return nullptr; // Handle allocation failure safely
-        }
-        
-        t8* buffer = static_cast<t8*>(allocated_ptr);
-        
-        // 1. Write the hexadecimal prefix
-        buffer[0] = '0';
-        buffer[1] = 'x';
-        
-        // Look-up table for hex characters to avoid branching/math
-        const char hex_chars[] = "0123456789abcdef";
-        
-        // 2. Process each nibble (4 bits) from most significant to least significant.
-        // Iterating backwards from index 17 down to 2 ensures correct endianness rendering.
-        for (int i = 17; i >= 2; --i) {
-            buffer[i] = static_cast<t8>(hex_chars[value & 0xF]);
-            value >>= 4; // Shift right by 4 bits to process the next nibble
-        }
-        
-        return buffer;
-    }
-    t8* convert_u8_to_hex_string(u8 value) {
-        const u64 buffer_size = 4; // 2 for "0x" + 2 for hex digits
-        
-        // Acquire memory allocation using the specified method
-        void* allocated_ptr = LoaderMemory::Acquire(buffer_size);
-        if (!allocated_ptr) {
-            return nullptr; // Handle allocation failure safely
-        }
-        
-        t8* buffer = static_cast<t8*>(allocated_ptr);
-        
-        // 1. Write the hexadecimal prefix
-        buffer[0] = '0';
-        buffer[1] = 'x';
-        
-        // Look-up table for hex characters to avoid branching/math
-        const char hex_chars[] = "0123456789abcdef";
-        
-        // 2. Process each nibble (4 bits) from most significant to least significant.
-        // Iterating backwards from index 3 down to 2 ensures correct padding and layout.
-        for (int i = 3; i >= 2; --i) {
-            buffer[i] = static_cast<t8>(hex_chars[value & 0xF]);
-            value >>= 4; // Shift right by 4 bits to process the next nibble
-        }
-        
-        return buffer;
     }
 }
