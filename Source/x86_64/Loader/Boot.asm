@@ -3,7 +3,7 @@
 
 [section .text]
 [bits 16]
-DivaOS.Loader.Entry16:
+DivaOS.Loader.Loader.Entry16:
     ;Enable address bit 20
     mov dx, 0x0092
     in al, dx
@@ -11,7 +11,7 @@ DivaOS.Loader.Entry16:
     out dx, al
 
     ;Check for protected mode support
-    DivaOS.Loader.Entry16.CheckProtectedMode:
+    DivaOS.Loader.Loader.Entry16.CheckProtectedMode:
     pushf
     pushf
     pop ax
@@ -26,31 +26,31 @@ DivaOS.Loader.Entry16:
     popf
     and ah, 0xF0
     test ah, ah
-    jnz DivaOS.Loader.Entry16.MemoryMap
+    jnz DivaOS.Loader.Loader.Entry16.MemoryMap
     ;Show error message otherwise
-    mov esi, DivaOS.Loader.Message.NoProtectedMode
+    mov esi, DivaOS.Loader.Loader.Message.NoProtectedMode
     jmp VBR.Code.Crash
 
     ;Map memory
-    DivaOS.Loader.Entry16.MemoryMap:
+    DivaOS.Loader.Loader.Entry16.MemoryMap:
     call DivaOS.Loader.Memory.Map.Build
     ;todo: return flag for error msg
-    jmp DivaOS.Loader.Entry16.Load32
+    jmp DivaOS.Loader.Loader.Entry16.Load32
 
     ;Set up protected mode
-    DivaOS.Loader.Entry16.Load32:
-    lgdt [DivaOS.Loader.GDTR]
+    DivaOS.Loader.Loader.Entry16.Load32:
+    lgdt [DivaOS.Loader.Loader.GDTR]
     mov eax, cr0
     or al, 0x01
     mov cr0, eax
     ;Enter protected mode
-    jmp DivaOS.Loader.GDTR.Code32:DivaOS.Loader.Entry32
+    jmp DivaOS.Loader.Loader.GDTR.Code32:DivaOS.Loader.Loader.Entry32
 
 [bits 32]
-DivaOS.Loader.Entry32:
+DivaOS.Loader.Loader.Entry32:
     ;Initialize execution
     mov esp, 0x00007000
-    mov ax, DivaOS.Loader.GDTR.Data32
+    mov ax, DivaOS.Loader.Loader.GDTR.Data32
     mov ds, ax
     mov ss, ax
     mov gs, ax
@@ -58,7 +58,7 @@ DivaOS.Loader.Entry32:
     mov fs, ax
 
     ;Check for cpuid support
-    DivaOS.Loader.Entry32.CheckCpuid:
+    DivaOS.Loader.Loader.Entry32.CheckCpuid:
     pushfd
     pushfd
     xor dword [ss:esp], 0x00200000 
@@ -69,35 +69,35 @@ DivaOS.Loader.Entry32:
     popfd
     and eax,0x00200000
     test eax, eax
-    jnz DivaOS.Loader.Entry32.CheckLongMode
+    jnz DivaOS.Loader.Loader.Entry32.CheckLongMode
     ;Show error message otherwise
-    mov esi, DivaOS.Loader.Message.NoCpuid
-    jmp DivaOS.Loader.Entry32.Crash
+    mov esi, DivaOS.Loader.Loader.Message.NoCpuid
+    jmp DivaOS.Loader.Loader.Entry32.Crash
 
     ;Check for long mode support
-    DivaOS.Loader.Entry32.CheckLongMode:
+    DivaOS.Loader.Loader.Entry32.CheckLongMode:
     mov eax, 0x80000001
     cpuid
     bswap edx
     test dl, 0x20
-    jnz DivaOS.Loader.Entry32.CheckMSR
+    jnz DivaOS.Loader.Loader.Entry32.CheckMSR
     ;Show error message otherwise
-    mov esi, DivaOS.Loader.Message.NoLongMode
-    jmp DivaOS.Loader.Entry32.Crash
+    mov esi, DivaOS.Loader.Loader.Message.NoLongMode
+    jmp DivaOS.Loader.Loader.Entry32.Crash
 
     ;Check for MSR support
-    DivaOS.Loader.Entry32.CheckMSR:
+    DivaOS.Loader.Loader.Entry32.CheckMSR:
     xor eax, eax
     inc eax
     cpuid 
     test dh, 0x20
-    jnz DivaOS.Loader.Entry32.Load64
+    jnz DivaOS.Loader.Loader.Entry32.Load64
     ;Show error message otherwise
-    mov esi, DivaOS.Loader.Message.NoMSR
-    jmp DivaOS.Loader.Entry32.Crash
+    mov esi, DivaOS.Loader.Loader.Message.NoMSR
+    jmp DivaOS.Loader.Loader.Entry32.Crash
 
     ;Set up long mode
-    DivaOS.Loader.Entry32.Load64:
+    DivaOS.Loader.Loader.Entry32.Load64:
 
     ;Enable PSA & PSE
     mov eax, cr4
@@ -106,7 +106,7 @@ DivaOS.Loader.Entry32:
     mov cr4, eax
 
     ;Set Page Table Structure Location
-    mov edx, DivaOS.Loader.Paging.PML4
+    mov edx, DivaOS.Loader.Loader.Paging.PML4
     mov cr3, edx
 
     ;Enable long mode
@@ -123,29 +123,29 @@ DivaOS.Loader.Entry32:
     mov cr0, eax
 
     ;Enter long mode
-    jmp DivaOS.Loader.GDTR.Code64:DivaOS.Loader.Entry64
+    jmp DivaOS.Loader.Loader.GDTR.Code64:DivaOS.Loader.Loader.Entry64
 
-    DivaOS.Loader.Entry32.Crash:
+    DivaOS.Loader.Loader.Entry32.Crash:
         mov edi, 0x000B8000
         mov ecx, 80
         cld
         mov ah, 0x0F
-        DivaOS.Loader.Entry32.Print.Loop:
+        DivaOS.Loader.Loader.Entry32.Print.Loop:
             lodsb
             stosw
             dec ecx
             cmp al, 0x00
-            jnz DivaOS.Loader.Entry32.Print.Loop
+            jnz DivaOS.Loader.Loader.Entry32.Print.Loop
         add edi, ecx
         add edi, ecx
         cli
         hlt
         jmp $
 [bits 64]
-DivaOS.Loader.Entry64:
+DivaOS.Loader.Loader.Entry64:
     ;Initialize registers
     ;mov rsp, 0x00007000
-    mov ax, DivaOS.Loader.GDTR.Data64
+    mov ax, DivaOS.Loader.Loader.GDTR.Data64
     mov ds, ax
     mov es, ax
     mov gs, ax
@@ -154,7 +154,7 @@ DivaOS.Loader.Entry64:
     mov rbx, Main
     call rbx
 
-    lea rdi, [rel DivaOS.Loader.Message.LoaderReturn]
+    lea rdi, [rel DivaOS.Loader.Loader.Message.LoaderReturn]
     call DivaOS.Loader.Peripherals.Terminal.Write_t8p
 
     jmp $
@@ -166,16 +166,16 @@ DivaOS.Loader.Entry64:
 
 align 4096, db 0x00
 
-DivaOS.Loader.Paging.PML4:
-    dq DivaOS.Loader.Paging.PML3 + 00000011b ;R/W, Present
+DivaOS.Loader.Loader.Paging.PML4:
+    dq DivaOS.Loader.Loader.Paging.PML3 + 00000011b ;R/W, Present
     times 511 dq 0x0000000000000000
-DivaOS.Loader.Paging.PML3:
-    dq DivaOS.Loader.Paging.PML2 + 00000011b ;R/W, Present
+DivaOS.Loader.Loader.Paging.PML3:
+    dq DivaOS.Loader.Loader.Paging.PML2 + 00000011b ;R/W, Present
     times 511 dq 0x0000000000000000
-DivaOS.Loader.Paging.PML2:
+DivaOS.Loader.Loader.Paging.PML2:
     dq 0x0000000000000000 + 10000011b ;2MB Pages, R/W, Present
     times 511 dq 0x0000000000000000
-DivaOS.Loader.Paging.PML1.High:
+DivaOS.Loader.Loader.Paging.PML1.High:
     %push
     %assign Offset 0x0000000000018000
     %rep 512
@@ -184,11 +184,11 @@ DivaOS.Loader.Paging.PML1.High:
     %endrep
     %pop
 
-DivaOS.Loader.GDTR:
+DivaOS.Loader.Loader.GDTR:
     dw 0x003f ;Size including nulldescriptor - 1
     dq $ ;Base Address including nulldescriptor
 
-    DivaOS.Loader.GDTR.Code32 equ $ - DivaOS.Loader.GDTR - 2
+    DivaOS.Loader.Loader.GDTR.Code32 equ $ - DivaOS.Loader.Loader.GDTR - 2
         dw 0xFFFF ;Size: 0x_0000
         dw 0x0000 ;Start: 0x____0000
         db 0x00 ;Start: 0x__00____
@@ -196,7 +196,7 @@ DivaOS.Loader.GDTR:
         db 0xF + (0b1100 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
         db 0x00 ;Start: 0x00______
 
-    DivaOS.Loader.GDTR.Data32 equ $ - DivaOS.Loader.GDTR - 2
+    DivaOS.Loader.Loader.GDTR.Data32 equ $ - DivaOS.Loader.Loader.GDTR - 2
         dw 0xFFFF ;Size: 0x_0000
         dw 0x0000 ;Start: 0x____0000
         db 0x00 ;Start: 0x__00____
@@ -204,7 +204,7 @@ DivaOS.Loader.GDTR:
         db 0xF + (0b1100 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
         db 0x00 ;Start: 0x00______
 
-    DivaOS.Loader.GDTR.Code64 equ $ - DivaOS.Loader.GDTR - 2
+    DivaOS.Loader.Loader.GDTR.Code64 equ $ - DivaOS.Loader.Loader.GDTR - 2
         dw 0xFFFF ;Size: 0x_0000
         dw 0x0000 ;Start: 0x____0000
         db 0x00 ;Start: 0x__00____
@@ -212,7 +212,7 @@ DivaOS.Loader.GDTR:
         db 0xF + (0b1110 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
         db 0x00 ;Start: 0x00______
 
-    DivaOS.Loader.GDTR.Data64 equ $ - DivaOS.Loader.GDTR - 2
+    DivaOS.Loader.Loader.GDTR.Data64 equ $ - DivaOS.Loader.Loader.GDTR - 2
         dw 0xFFFF ;Size: 0x_0000
         dw 0x0000 ;Start: 0x____0000
         db 0x00 ;Start: 0x__00____
@@ -220,8 +220,8 @@ DivaOS.Loader.GDTR:
         db 0xF + (0b1110 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
         db 0x00 ;Start: 0x00______
 
-DivaOS.Loader.Message.NoProtectedMode: db "Protected mode not supported!", 0x00
-DivaOS.Loader.Message.NoCpuid: db "CPUID not supported!", 0x00
-DivaOS.Loader.Message.NoLongMode: db "Long mode not supported!", 0x00
-DivaOS.Loader.Message.NoMSR: db "MSRs not supported!", 0x00
-DivaOS.Loader.Message.LoaderReturn: db "Loader exited!", 0x00
+DivaOS.Loader.Loader.Message.NoProtectedMode: db "Protected mode not supported!", 0x00
+DivaOS.Loader.Loader.Message.NoCpuid: db "CPUID not supported!", 0x00
+DivaOS.Loader.Loader.Message.NoLongMode: db "Long mode not supported!", 0x00
+DivaOS.Loader.Loader.Message.NoMSR: db "MSRs not supported!", 0x00
+DivaOS.Loader.Loader.Message.LoaderReturn: db "Loader exited!", 0x00
