@@ -1,7 +1,6 @@
 #include "Memory/Map.hpp"
 
 #include "Memory/LoaderMemory.hpp"
-#include "Memory/E820MemoryMapEntry.hpp"
 
 #include "Peripherals/Terminal.hpp"
 
