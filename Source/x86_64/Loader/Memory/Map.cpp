@@ -9,7 +9,10 @@ namespace DivaOS::Loader::Memory::Map {
     extern u64 E820MemoryMapLength asm("DivaOS.Loader.Memory.Map.Length");
     extern E820MemoryMapEntry* E820MemoryMap asm("DivaOS.Loader.Memory.Map.Start");
 
+    AddressRange* Cached = null;
+
     AddressRange* Get(){
+        if (Cached != null) return Cached;
         u64 raw_entries = E820MemoryMapLength * 2;
         void** raw_entries_address = (void**)LoaderMemory::Acquire(sizeof(void*) * raw_entries);
         bool* raw_entries_usable = (bool*)LoaderMemory::Acquire(sizeof(bool) * raw_entries);
@@ -75,6 +78,6 @@ namespace DivaOS::Loader::Memory::Map {
             }
             processed_entries_range[processed_entries] = AddressRange::Null;
         }
-        return processed_entries_range;
+        return Cached = processed_entries_range;
     }
 }
