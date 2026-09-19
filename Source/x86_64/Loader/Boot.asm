@@ -1,95 +1,5 @@
-[section .MBR]
-[bits 16]
-MBR:
-MBR.Code:
-    ;Reset some registers
-    xor ax, ax
-    mov ds, ax
-    mov di, ax
-    mov [MBR.Code.Disk], dl ;Save bootdisk id
-    sti ;Enable interrupts
-    ;Set video mode
-    mov ax, 0x0003
-    int 0x10
-    ;Load kernel (127 sectors / 64KiB to 0x8000)
-    mov ax, 0x0800
-    mov es, ax
-    mov ax, 0x027F
-    mov bx, cx
-    mov cl, 0x02
-    int 0x13
-    cli ;Disable interrupts
-    ;Execute bootloader if successful
-    jnc MBR.Code.RunBootloader
-    ;Show error message otherwise
-    mov si, MBR.Code.Message.NoDisk
-    jmp MBR.Code.Error
-    MBR.Code.RunBootloader:
-    jmp 0x0000:Loader.Entry16
-
-    MBR.Code.Error: 
-        mov ax, 0xB800
-        mov es, ax
-        xor ah, ah
-        mov di, ax
-        cld
-        lodsb
-        mov ah, al
-        MBR.Code.Error.Loop:
-            lodsb
-            stosw
-            cmp al, 0x00
-            jnz MBR.Code.Error.Loop
-        cli
-        MBR.Code.Error.Halt:
-            hlt
-        jmp MBR.Code.Error.Halt
-
-    MBR.Code.Disk: db 0x00
-
-    MBR.Code.Message.NoDisk: db 0x0F, "Unable to load bootloader!", 0x00
-times 0x01BE - ($ - MBR.Code) db 00
-MBR.Partitions:
-    db 0x80 ;Bootable
-    db 0x00 ;Starting Head
-    dw 0x01 + (0x0000 << 0x06) ;Starting Sector and Cylinder
-    db 0xD3 ;System ID = ETFS (ESPIOS Tree File System)
-    db 0x00 ;Ending Head
-    dw 0x02 + (0x0000 << 0x06) ;Ending Sector and Cylinder
-    dd 0x00000001 ;LBA Start (?)
-    dd 0x00000001 ;Total Sectors
-
-    db 0x00 ;Not Bootable
-    db 0x00 ;Starting Head
-    dw 0x00 + (0x0000 << 0x06) ;Starting Sector and Cylinder
-    db 0x00 ;System ID
-    db 0x00 ;Ending Head
-    dw 0x00 + (0x0000 << 0x06) ;Ending Sector and Cylinder
-    dd 0x00000000 ;LBA Start (?)
-    dd 0x00000000 ;Total Sectors
-
-    db 0x00 ;Not Bootable
-    db 0x00 ;Starting Head
-    dw 0x00 + (0x0000 << 0x06) ;Starting Sector and Cylinder
-    db 0x00 ;System ID
-    db 0x00 ;Ending Head
-    dw 0x00 + (0x0000 << 0x06) ;Ending Sector and Cylinder
-    dd 0x00000000 ;LBA Start (?)
-    dd 0x00000000 ;Total Sectors
-
-    db 0x00 ;Not Bootable
-    db 0x00 ;Starting Head
-    dw 0x00 + (0x0000 << 0x06) ;Starting Sector and Cylinder
-    db 0x00 ;System ID
-    db 0x00 ;Ending Head
-    dw 0x00 + (0x0000 << 0x06) ;Ending Sector and Cylinder
-    dd 0x00000000 ;LBA Start (?)
-    dd 0x00000000 ;Total Sectors
-
-    ;Boot flag
-    db 0x55, 0xAA
-
-[section .Loader]
+%include "/VBR.asm"
+[section .text]
 [bits 16]
 Loader.Entry16:
     ;Enable address bit 20
@@ -97,6 +7,9 @@ Loader.Entry16:
     in al, dx
     or al, 0x02
     out dx, al
+
+    ;extern TestPrint
+    ;call TestPrint
 
     ;Check for protected mode support
     Loader.Entry16.CheckProtectedMode:
@@ -114,10 +27,10 @@ Loader.Entry16:
     popf
     and ah, 0xF0
     test ah, ah
-    ;Show error message otherwise
     jnz Loader.Entry16.Load32
-    mov si, Loader.Message.NoProtectedMode
-    jmp MBR.Code.Error
+    ;Show error message otherwise
+    mov esi, Loader.Message.NoProtectedMode
+    jmp VBR.Code.Crash
 
     ;Set up protected mode
     Loader.Entry16.Load32:
@@ -129,7 +42,6 @@ Loader.Entry16:
     jmp Loader.GDTR.Code32:Loader.Entry32
 
 [bits 32]
-%include "/Loader/Terminal32.asm"
 Loader.Entry32:
     ;Initialize execution
     mov esp, 0x00007000
@@ -155,7 +67,7 @@ Loader.Entry32:
     jnz Loader.Entry32.CheckLongMode
     ;Show error message otherwise
     mov esi, Loader.Message.NoCpuid
-    jmp Loader.Terminal32.Crash
+    jmp Loader.Entry32.Crash
 
     ;Check for long mode support
     Loader.Entry32.CheckLongMode:
@@ -166,7 +78,7 @@ Loader.Entry32:
     jnz Loader.Entry32.CheckMSR
     ;Show error message otherwise
     mov esi, Loader.Message.NoLongMode
-    jmp Loader.Terminal32.Crash
+    jmp Loader.Entry32.Crash
 
     ;Check for MSR support
     Loader.Entry32.CheckMSR:
@@ -176,8 +88,8 @@ Loader.Entry32:
     test dh, 0x20
     jnz Loader.Entry32.Load64
     ;Show error message otherwise
-    jmp Loader.Terminal32.Crash
     mov esi, Loader.Message.NoMSR
+    jmp Loader.Entry32.Crash
 
     ;Set up long mode
     Loader.Entry32.Load64:
@@ -208,30 +120,72 @@ Loader.Entry32:
     ;Enter long mode
     jmp Loader.GDTR.Code64:Loader.Entry64
 
+    Loader.Entry32.Crash:
+        mov edi, 0x000B8000
+        mov ecx, 80
+        cld
+        mov ah, 0x0F
+        Loader.Entry32.Print.Loop:
+            lodsb
+            stosw
+            dec ecx
+            cmp al, 0x00
+            jnz Loader.Entry32.Print.Loop
+        add edi, ecx
+        add edi, ecx
+        cli
+        hlt
+        jmp $
 [bits 64]
 Loader.Entry64:
+    ;Initialize registers
+    ;mov rsp, 0x00007000
     mov ax, Loader.GDTR.Data64
     mov ds, ax
+    mov es, ax
+    mov gs, ax
+    mov fs, ax
 
-    mov al, "F"
-    mov ah, 0x0F
-    mov [0x00000000000B8000], ax
-    call Main
+    mov rbx, Main
+    call rbx
+
+    lea rdi, [rel Loader.Message.NoProtectedMode]
+    call DivaOS.Loader.Terminal.Write_t8p
+
     jmp $
 
     extern Main
+    extern DivaOS.Loader.Terminal.Write_t8p
+
+[section .rodata]
 
 align 4096, db 0x00
 
 Loader.Paging.PML4:
-    dq Loader.Paging.PML3 + 00000011b ;R/W, Present
+    dq Loader.Paging.PML3.Low + 00000011b ;R/W, Present
+    times 510 dq 0x0000000000000000
+    dq Loader.Paging.PML3.High + 00000011b ;R/W, Present
+Loader.Paging.PML3.Low:
+    dq Loader.Paging.PML2.Low + 00000011b ;R/W, Present
     times 511 dq 0x0000000000000000
-Loader.Paging.PML3:
-    dq Loader.Paging.PML2 + 00000011b ;R/W, Present
-    times 511 dq 0x0000000000000000
-Loader.Paging.PML2:
+Loader.Paging.PML2.Low:
     dq 0x0000000000000000 + 10000011b ;2MB Pages, R/W, Present
     times 511 dq 0x0000000000000000
+Loader.Paging.PML3.High:
+    times 510 dq 0x0000000000000000
+    dq Loader.Paging.PML2.High + 00000011b ;R/W, Present
+    times 1 dq 0x0000000000000000
+Loader.Paging.PML2.High:
+    dq Loader.Paging.PML1.High + 00000011b ;R/W, Present
+    times 511 dq 0x0000000000000000
+Loader.Paging.PML1.High:
+    %push
+    %assign Offset 0x0000000000018000
+    %rep 512
+        dq Offset + 00000011b ; R/W, Present
+        %assign Offset Offset + 0x1000
+    %endrep
+    %pop
 
 Loader.GDTR:
     dw 0x003f ;Size including nulldescriptor - 1
@@ -269,7 +223,7 @@ Loader.GDTR:
         db 0xF + (0b1110 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
         db 0x00 ;Start: 0x00______
 
-Loader.Message.NoProtectedMode: db 0x0F, "Protected mode not supported!", 0x00
-Loader.Message.NoCpuid: db 0x0F, "CPUID not supported!", 0x00
-Loader.Message.NoLongMode: db 0x0F, "Long mode not supported!", 0x00
-Loader.Message.NoMSR: db 0x0F, "MSRs not supported!", 0x00
+Loader.Message.NoProtectedMode: db "Protected mode not supported!", 0x00
+Loader.Message.NoCpuid: db "CPUID not supported!", 0x00
+Loader.Message.NoLongMode: db "Long mode not supported!", 0x00
+Loader.Message.NoMSR: db "MSRs not supported!", 0x00
