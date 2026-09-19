@@ -2,7 +2,6 @@
 #include "Definitions.hpp"
 
 namespace DivaOS::Loader::Memory {
-    struct AddressRange;
     struct AddressRange{
         static const AddressRange Null;
 

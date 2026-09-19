@@ -7,7 +7,7 @@ namespace DivaOS::Loader::Peripherals::Terminal {
             t8 Character;
             u8 ColorMask;
 
-            VGACharacter(t8 character, u8 colorMask = 0x0F){
+            VGACharacter(const t8 character, const u8 colorMask = 0x0F){
                 Character = character;
                 ColorMask = colorMask;
             }

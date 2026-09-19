@@ -2,6 +2,6 @@
 #include "Definitions.hpp"
 
 namespace DivaOS::Loader::Memory::PhysicalMemory {
-    void* Acquire(u64 size);
-    void Release(void* address);
+    void* Acquire(const u64 size);
+    void Release(const void* address);
 }
