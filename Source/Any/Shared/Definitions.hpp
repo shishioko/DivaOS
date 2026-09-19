@@ -1,5 +1,7 @@
 #pragma once
 
+#define null nullptr
+
 using t8  = char;
 
 using u1  = bool;
