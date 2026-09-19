@@ -1,5 +1,7 @@
 #include "Memory/LoaderMemory.hpp"
 
+#include "Loader.hpp"
+
 namespace DivaOS::Loader::Memory::LoaderMemory {
     extern void* Start asm("DivaOS.Loader.Memory.LoaderMemory.Start");
     extern void* Offset asm("DivaOS.Loader.Memory.LoaderMemory.Offset");
