@@ -16,20 +16,16 @@ DivaOS.Loader.Memory.Map.Build:
     xor ebx, ebx
     mov edx, dword 0x534D4150
     mov edi, [DivaOS.Loader.Memory.LoaderMemory.Offset]
-    add edi, 4
     mov [DivaOS.Loader.Memory.Map.Start], edi
     DivaOS.Loader.Memory.Map.Build.Iterate:
-        mov ecx, 20
+        mov ecx, 24
         mov eax, 0xE820
-        add edi, 8
-        mov [edi-8], dword 0
-        mov [edi-4], dword 0
         sti
         int 0x15
         cli
         jc DivaOS.Loader.Memory.Map.Build.Error 
-        mov [edi-4], ecx
-        add edi, ecx
+        add edi, 24
+        inc [DivaOS.Loader.Memory.Map.Length]
         cmp ebx, 0
         jnz DivaOS.Loader.Memory.Map.Build.Iterate
     mov [dword DivaOS.Loader.Memory.LoaderMemory.Offset], edi
@@ -52,3 +48,9 @@ DivaOS.Loader.Memory.Map.Build:
     
 [section .rodata]
 DivaOS.Loader.Memory.Map.Message.Error: db "Error while mapping memory!", 0x00
+
+[section .data]
+global DivaOS.Loader.Memory.Map.Length
+DivaOS.Loader.Memory.Map.Length: dq 0x000000000000
+global DivaOS.Loader.Memory.Map.Start
+DivaOS.Loader.Memory.Map.Start: dq 0x000000000000
