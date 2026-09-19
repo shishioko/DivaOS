@@ -57,23 +57,29 @@ VBR.Code:
     VBR.Code.RunBootloader:
     jmp 0x0000:DivaOS.Loader.Loader.Entry16
 
+    ; Prints an error message and halts execution
+    ; Input: si = Pointer to messaage to be printed
     VBR.Code.Crash: 
         mov ax, 0xB800
         mov es, ax
         xor ah, ah
         mov di, ax
         cld
-        mov ah, 0x0F
+        mov ah, 0x0F ;Set print color
+        ;Iterate string content
         VBR.Code.Crash.Loop:
             lodsb
             stosw
-            cmp al, 0x00
+            cmp al, 0x00 ;Check for null terminator
             jnz VBR.Code.Crash.Loop
+        ;Halt execution
         cli
         hlt
         jmp $
 
+    ; Used to store the disk the program is on, for BIOS interrupt purposes
     VBR.Code.Disk: db 0x00
+    ; Used to offset the program is at, for BIOS interrupt purposes
     VBR.Code.Sector: dd 0x00000000
 
     VBR.DiskAddressPacket.Loader:
