@@ -44,7 +44,7 @@ VBR.Code:
     mov si, VBR.Code.Message.NoDisk
     jmp VBR.Code.Crash
     VBR.Code.RunBootloader:
-    jmp 0x0000:Loader.Entry16
+    jmp 0x0000:DivaOS.Loader.Entry16
 
     VBR.Code.Crash: 
         mov ax, 0xB800
