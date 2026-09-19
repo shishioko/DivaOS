@@ -1,5 +1,7 @@
 #include "Peripherals/Terminal.hpp"
 
+#include "Loader.hpp"
+
 namespace DivaOS::Loader::Peripherals::Terminal {
     namespace
     {
@@ -62,11 +64,20 @@ namespace DivaOS::Loader::Peripherals::Terminal {
                     source[i] = VGACharacter(' ', 0x00);
                 }
             }
-            //todo: handle absurdly high values
+            //Ensure all lower lines are cleared
+            for (u16 line = 0; line < y && line < Height; line++){
+                v VGACharacter* vga = CalculateAddress(0, Height - line - 1);
+                //Iterate the characters of the line to clear
+                for (u16 i = 0; i < Width; i++){
+                    vga[i] = VGACharacter(' ', 0x00);
+                }
+            }
         }
         static inline v VGACharacter* CalculateAddress(const u16 x, const u16 y){
+            if (x > Width || y > Height) {
+                Loader::Crash("Tried to access framebuffer out of bounds");
+            }
             return &VGA[y * Width + x];
-            //todo: handle out of bounds requests
         }
     }
     
