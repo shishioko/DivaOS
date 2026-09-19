@@ -1,7 +1,9 @@
+%include "/Memory/LoaderMemory.asm"
+
 [section .text]
 [bits 16]
 
-DivaOS.Loader.MemoryMap.Map:
+DivaOS.Loader.Memory.Map.Build:
     pushf
     push eax
     push ebx
@@ -13,23 +15,24 @@ DivaOS.Loader.MemoryMap.Map:
     mov es, ax
     xor ebx, ebx
     mov edx, dword 0x534D4150
-    mov edi, [DivaOS.Loader.LoaderMemory.Offset]
+    mov edi, [DivaOS.Loader.Memory.LoaderMemory.Offset]
     add edi, 4
-    mov [DivaOS.Loader.MemoryMap.Start], edi
-    DivaOS.Loader.MemoryMap.Map.Iterate:
+    mov [DivaOS.Loader.Memory.Map.Start], edi
+    DivaOS.Loader.Memory.Build.Iterate:
         mov ecx, 20
         mov eax, 0xE820
-        add edi, 4
+        add edi, 8
+        mov [edi-8], dword 0
         mov [edi-4], dword 0
         sti
         int 0x15
         cli
-        jc DivaOS.Loader.MemoryMap.Map.Error 
+        jc DivaOS.Loader.Memory.Build.Error 
         mov [edi-4], ecx
         add edi, ecx
         cmp ebx, 0
-        jnz DivaOS.Loader.MemoryMap.Map.Iterate
-    mov [dword DivaOS.Loader.LoaderMemory.Offset], edi
+        jnz DivaOS.Loader.Memory.Build.Iterate
+    mov [dword DivaOS.Loader.Memory.LoaderMemory.Offset], edi
 
     ;todo: make a table of pointers (exclude unusable and current area)
     ;todo: sort that table
@@ -43,13 +46,9 @@ DivaOS.Loader.MemoryMap.Map:
     pop eax
     popf
     ret
-    DivaOS.Loader.MemoryMap.Map.Error:
-        mov esi, dword DivaOS.Loader.MemoryMap.Message.Error
+    DivaOS.Loader.Memory.Build.Error:
+        mov esi, dword DivaOS.Loader.Memory.Map.Message.Error
         jmp VBR.Code.Crash
     
 [section .rodata]
-DivaOS.Loader.MemoryMap.Message.Error: db "Error while mapping memory!", 0x00
-
-[section .data]
-global DivaOS.Loader.MemoryMap.Start
-DivaOS.Loader.MemoryMap.Start: dq 0x000000000000
+DivaOS.Loader.Memory.Map.Message.Error: db "Error while mapping memory!", 0x00

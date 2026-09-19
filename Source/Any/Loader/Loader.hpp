@@ -1,7 +1,7 @@
 #pragma once
 #include "Definitions.hpp"
-#include "Terminal.hpp"
-#include "LoaderMemory.hpp"
+#include "Peripherals/Terminal.hpp"
+#include "Memory/LoaderMemory.hpp"
 
 namespace DivaOS {
     namespace Loader{

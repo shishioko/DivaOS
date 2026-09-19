@@ -1,5 +1,5 @@
 %include "/VBR.asm"
-%include "/MemoryMap.asm"
+%include "/Memory/Map.asm"
 
 [section .text]
 [bits 16]
@@ -33,7 +33,7 @@ DivaOS.Loader.Entry16:
 
     ;Map memory
     DivaOS.Loader.Entry16.MemoryMap:
-    call DivaOS.Loader.MemoryMap.Map
+    call DivaOS.Loader.Memory.Map.Build
     ;todo: return flag for error msg
     jmp DivaOS.Loader.Entry16.Load32
 
@@ -155,12 +155,12 @@ DivaOS.Loader.Entry64:
     call rbx
 
     lea rdi, [rel DivaOS.Loader.Message.LoaderReturn]
-    call DivaOS.Loader.Terminal.Write_t8p
+    call DivaOS.Loader.Peripherals.Terminal.Write_t8p
 
     jmp $
 
     extern Main
-    extern DivaOS.Loader.Terminal.Write_t8p
+    extern DivaOS.Loader.Peripherals.Terminal.Write_t8p
 
 [section .rodata]
 
@@ -225,17 +225,3 @@ DivaOS.Loader.Message.NoCpuid: db "CPUID not supported!", 0x00
 DivaOS.Loader.Message.NoLongMode: db "Long mode not supported!", 0x00
 DivaOS.Loader.Message.NoMSR: db "MSRs not supported!", 0x00
 DivaOS.Loader.Message.LoaderReturn: db "Loader exited!", 0x00
-
-[section .data]
-
-global DivaOS.Loader.LoaderMemory.Start
-DivaOS.Loader.LoaderMemory.Start: dq DivaOS.Loader.LoaderMemory.Memory.Start
-global DivaOS.Loader.LoaderMemory.Offset
-DivaOS.Loader.LoaderMemory.Offset: dq DivaOS.Loader.LoaderMemory.Memory.Start
-global DivaOS.Loader.LoaderMemory.End
-DivaOS.Loader.LoaderMemory.End: dq DivaOS.Loader.LoaderMemory.Memory.End
-
-[section .bss]
-
-DivaOS.Loader.LoaderMemory.Memory.Start:
-DivaOS.Loader.LoaderMemory.Memory.End equ 0x9FFFF

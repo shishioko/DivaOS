@@ -25,8 +25,8 @@ SECTIONS
         *(.bss.*)
         *(COMMON)
     }
-    .bss.loadermemory : {
-        *(.bss.loadermemory)
+    .loadermemory : {
+        *(.loadermemory)
     }
 
     .padding : 
