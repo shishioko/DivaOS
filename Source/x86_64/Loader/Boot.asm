@@ -31,8 +31,8 @@ DivaOS.Loader.Entry16:
     mov esi, DivaOS.Loader.Message.NoProtectedMode
     jmp VBR.Code.Crash
 
-    DivaOS.Loader.Entry16.MemoryMap:
     ;Map memory
+    DivaOS.Loader.Entry16.MemoryMap:
     call DivaOS.Loader.MemoryMap.Map
     ;todo: return flag for error msg
     jmp DivaOS.Loader.Entry16.Load32
