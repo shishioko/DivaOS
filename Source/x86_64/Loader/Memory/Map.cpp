@@ -13,71 +13,71 @@ namespace DivaOS::Loader::Memory::Map {
 
     AddressRange* Get(){
         if (Cached != null) return Cached;
-        u64 raw_entries = E820MemoryMapLength * 2;
-        void** raw_entries_address = (void**)LoaderMemory::Acquire(sizeof(void*) * raw_entries);
-        bool* raw_entries_usable = (bool*)LoaderMemory::Acquire(sizeof(bool) * raw_entries);
-        bool* raw_entries_start = (bool*)LoaderMemory::Acquire(sizeof(bool) * raw_entries);
+        u64 rawEntries = E820MemoryMapLength * 2;
+        void** rawEntriesAddress = (void**)LoaderMemory::Acquire(sizeof(void*) * rawEntries);
+        bool* rawEntriesUsable = (bool*)LoaderMemory::Acquire(sizeof(bool) * rawEntries);
+        bool* rawEntriesStart = (bool*)LoaderMemory::Acquire(sizeof(bool) * rawEntries);
         //Peripherals::Terminal::Write('0' + (const t8)E820MemoryMapLength);
         for (u64 i = 0; i < E820MemoryMapLength; i++){
             E820MemoryMapEntry entry = E820MemoryMap[i];
             bool usable = entry.Type == 1;
-            raw_entries_address[i * 2] = (void*)entry.Start;
-            raw_entries_address[i * 2 + 1] = (void*)(entry.Start + entry.Size);
-            raw_entries_usable[i * 2] = usable;
-            raw_entries_usable[i * 2 + 1] = usable;
-            raw_entries_start[i * 2] = true;
-            raw_entries_start[i * 2 + 1] = false;
+            rawEntriesAddress[i * 2] = (void*)entry.Start;
+            rawEntriesAddress[i * 2 + 1] = (void*)(entry.Start + entry.Size);
+            rawEntriesUsable[i * 2] = usable;
+            rawEntriesUsable[i * 2 + 1] = usable;
+            rawEntriesStart[i * 2] = true;
+            rawEntriesStart[i * 2 + 1] = false;
         }
-        for (u64 i = 0; i < raw_entries; i++){
-            bool alignUp = raw_entries_usable[i] == raw_entries_start[i];;
-            raw_entries_address[i] = (void*)(((u64)raw_entries_address[i] + (alignUp ? 0x0FFF : 0x0000)) & ~0x0FFF);
+        for (u64 i = 0; i < rawEntries; i++){
+            bool alignUp = rawEntriesUsable[i] == rawEntriesStart[i];;
+            rawEntriesAddress[i] = (void*)(((u64)rawEntriesAddress[i] + (alignUp ? 0x0FFF : 0x0000)) & ~0x0FFF);
         }
         while (true){
             u64 sorted = 0;
-            for (u64 i = 0; i + 1 < raw_entries; i++){
-                void* address = raw_entries_address[i];
-                bool usable = raw_entries_usable[i];
-                bool start = raw_entries_start[i];
-                if (raw_entries_address[i + 1] < address){
-                    raw_entries_address[i] = raw_entries_address[i + 1];
-                    raw_entries_usable[i] = raw_entries_usable[i + 1];
-                    raw_entries_start[i] = raw_entries_start[i + 1];
-                    raw_entries_address[i + 1] = address;
-                    raw_entries_usable[i + 1] = usable;
-                    raw_entries_start[i + 1] = start;
+            for (u64 i = 0; i + 1 < rawEntries; i++){
+                void* address = rawEntriesAddress[i];
+                bool usable = rawEntriesUsable[i];
+                bool start = rawEntriesStart[i];
+                if (rawEntriesAddress[i + 1] < address){
+                    rawEntriesAddress[i] = rawEntriesAddress[i + 1];
+                    rawEntriesUsable[i] = rawEntriesUsable[i + 1];
+                    rawEntriesStart[i] = rawEntriesStart[i + 1];
+                    rawEntriesAddress[i + 1] = address;
+                    rawEntriesUsable[i + 1] = usable;
+                    rawEntriesStart[i + 1] = start;
                     sorted++;
                 }
             }
             if (sorted <= 0) break;
         }
-        AddressRange* processed_entries_range = (AddressRange*)LoaderMemory::Acquire(sizeof(AddressRange) * raw_entries);
-        u64 processed_entries = 0;
+        AddressRange* processedEntriesRange = (AddressRange*)LoaderMemory::Acquire(sizeof(AddressRange) * rawEntries);
+        u64 processedEntries = 0;
         {
-            s64 current_usable_score = 0;
-            s64 current_unusable_score = 0;
-            for (u64 i = 0; i < raw_entries; i++){
-                s64 previous_usable_score = current_usable_score;
-                s64 previous_unusable_score = current_unusable_score;
-                void* address = raw_entries_address[i];
-                bool usable = raw_entries_usable[i];
-                bool start = raw_entries_start[i];
-                (usable ? current_usable_score : current_unusable_score) += start ? 1 : -1;
+            s64 currentUsableScore = 0;
+            s64 currentUnusableScore = 0;
+            for (u64 i = 0; i < rawEntries; i++){
+                s64 previousUsableScore = currentUsableScore;
+                s64 previousUnusableScore = currentUnusableScore;
+                void* address = rawEntriesAddress[i];
+                bool usable = rawEntriesUsable[i];
+                bool start = rawEntriesStart[i];
+                (usable ? currentUsableScore : currentUnusableScore) += start ? 1 : -1;
 
-                s64 current_actual_score = current_unusable_score > 0 ? 0 : current_usable_score;
-                s64 previous_actual_score = previous_unusable_score > 0 ? 0 : previous_usable_score;
+                s64 currentActualScore = currentUnusableScore > 0 ? 0 : currentUsableScore;
+                s64 previousActualScore = previousUnusableScore > 0 ? 0 : previousUsableScore;
 
-                if (previous_actual_score > 0 && current_actual_score <= 0){
-                    if (processed_entries_range[processed_entries].Start < address){
-                    processed_entries_range[processed_entries].End = address;
-                        processed_entries++;
+                if (previousActualScore > 0 && currentActualScore <= 0){
+                    if (processedEntriesRange[processedEntries].Start < address){
+                    processedEntriesRange[processedEntries].End = address;
+                        processedEntries++;
                     }
                 }
-                if (previous_actual_score <= 0 && current_actual_score > 0){
-                    processed_entries_range[processed_entries].Start = address;
+                if (previousActualScore <= 0 && currentActualScore > 0){
+                    processedEntriesRange[processedEntries].Start = address;
                 }
             }
-            processed_entries_range[processed_entries] = AddressRange::Null;
+            processedEntriesRange[processedEntries] = AddressRange::Null;
         }
-        return Cached = processed_entries_range;
+        return Cached = processedEntriesRange;
     }
 }
