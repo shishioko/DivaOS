@@ -4,7 +4,7 @@ namespace DivaOS{
     namespace Loader{
         namespace Peripherals{
             namespace Terminal{
-                namespace name
+                namespace
                 {
                     struct VGACharacter{
                         t8 Character;
