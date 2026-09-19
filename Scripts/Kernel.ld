@@ -6,15 +6,19 @@ SECTIONS
 
     .text : {
         *(.text)
+        *(.text.*)
     }
     .rodata : {
         *(.rodata)
+        *(.rodata.*)
     }
     .data : {
         *(.data)
+        *(.data.*)
     }
     .bss : {
         *(.bss)
+        *(.bss.*)
         *(COMMON)
     }
     .eh_frame : {

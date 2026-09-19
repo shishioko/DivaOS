@@ -6,18 +6,27 @@ SECTIONS
     
     .vbr : {
         *(.vbr)
+        *(.vbr.*)
     }
     .text : {
-        *(.Loader)
+        *(.text)
+        *(.text.*)
     }
     .rodata : {
-        *(.Loader)
+        *(.rodata)
+        *(.rodata.*)
     }
     .data : {
-        *(.Loader)
+        *(.data)
+        *(.data.*)
     }
     .bss : {
-        *(.Loader)
+        *(.bss)
+        *(.bss.*)
+        *(COMMON)
+    }
+    .bss.loadermemory : {
+        *(.bss.loadermemory)
     }
 
     .padding : 
