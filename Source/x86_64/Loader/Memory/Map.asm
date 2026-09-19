@@ -11,6 +11,9 @@ DivaOS.Loader.Memory.Map.Build:
     push edx
     push edi
 
+    cmp [DivaOS.Loader.Memory.Map.Start], 0
+    jnz DivaOS.Loader.Memory.Map.Build.Return
+
     xor ax, ax
     mov es, ax
     xor ebx, ebx
@@ -30,11 +33,7 @@ DivaOS.Loader.Memory.Map.Build:
         jnz DivaOS.Loader.Memory.Map.Build.Iterate
     mov [dword DivaOS.Loader.Memory.LoaderMemory.Offset], edi
 
-    ;todo: make a table of pointers (exclude unusable and current area)
-    ;todo: sort that table
-    ;todo: shrink segments if they overlap with restrictive ones\
-    ;todo: shrimk segments to page boundaries
-
+    DivaOS.Loader.Memory.Map.Build.Return:
     pop edi
     pop edx
     pop ecx
