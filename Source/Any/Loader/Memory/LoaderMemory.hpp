@@ -1,7 +1,6 @@
 #pragma once
 #include "Definitions.hpp"
-#include "Loader.hpp"
 
 namespace DivaOS::Loader::Memory::LoaderMemory {
-    extern void* Acquire(u64 size, u8 alignment) asm("DivaOS.Loader.Memory.LoaderMemory.Acquire_u64_u1");
+    extern void* Acquire(u64 size, u8 alignment = 0) asm("DivaOS.Loader.Memory.LoaderMemory.Acquire_u64_u1");
 }
