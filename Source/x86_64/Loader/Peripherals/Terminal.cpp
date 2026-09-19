@@ -90,7 +90,7 @@ namespace DivaOS::Loader::Peripherals::Terminal {
         }
     }
 
-    static const void ScrollUp(u16 y){
+    static const void ScrollUp(const u16 y){
         Y -= y;
         for (u16 line = y; line < Height; line++){
             v VGACharacter* destination = CalculateAddress(0, line - y);
@@ -101,7 +101,7 @@ namespace DivaOS::Loader::Peripherals::Terminal {
             }
         }
     }
-    static inline v VGACharacter* CalculateAddress(u16 x, u16 y){
+    static inline v VGACharacter* CalculateAddress(const u16 x, const u16 y){
         return &VGA[y * Width + x];
     }
 }
