@@ -18,7 +18,7 @@ DivaOS.Loader.Memory.Map.Build:
     mov edi, [DivaOS.Loader.Memory.LoaderMemory.Offset]
     add edi, 4
     mov [DivaOS.Loader.Memory.Map.Start], edi
-    DivaOS.Loader.Memory.Build.Iterate:
+    DivaOS.Loader.Memory.Map.Build.Iterate:
         mov ecx, 20
         mov eax, 0xE820
         add edi, 8
@@ -27,11 +27,11 @@ DivaOS.Loader.Memory.Map.Build:
         sti
         int 0x15
         cli
-        jc DivaOS.Loader.Memory.Build.Error 
+        jc DivaOS.Loader.Memory.Map.Build.Error 
         mov [edi-4], ecx
         add edi, ecx
         cmp ebx, 0
-        jnz DivaOS.Loader.Memory.Build.Iterate
+        jnz DivaOS.Loader.Memory.Map.Build.Iterate
     mov [dword DivaOS.Loader.Memory.LoaderMemory.Offset], edi
 
     ;todo: make a table of pointers (exclude unusable and current area)
@@ -46,7 +46,7 @@ DivaOS.Loader.Memory.Map.Build:
     pop eax
     popf
     ret
-    DivaOS.Loader.Memory.Build.Error:
+    DivaOS.Loader.Memory.Map.Build.Error:
         mov esi, dword DivaOS.Loader.Memory.Map.Message.Error
         jmp VBR.Code.Crash
     
