@@ -7,6 +7,14 @@
 
 namespace DivaOS::Loader::Memory::Map {
     namespace{
+        struct E820MemoryMapEntry{
+            const void* Start;
+            const u64 Size;
+            const u32 Type;
+            const u32 Attributes;
+            E820MemoryMapEntry() = delete;
+        };
+
         extern u64 E820MemoryMapLength asm("DivaOS.Loader.Memory.Map.Length");
         extern E820MemoryMapEntry* E820MemoryMap asm("DivaOS.Loader.Memory.Map.Start");
 
