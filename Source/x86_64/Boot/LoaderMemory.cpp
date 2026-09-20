@@ -1,15 +1,13 @@
-#include "Memory/LoaderMemory.hpp"
+#include "Boot/LoaderMemory.hpp"
 
-#include "Loader.hpp"
-
-namespace DivaOS::Loader::Memory::LoaderMemory {
-    namespace{
+namespace DivaOS::Boot::Memory::LoaderMemory {
+    /*namespace{
         /// @brief Holds the initial location of the memory to be used by the bootloader
-        extern void* Start asm("DivaOS.Loader.Memory.LoaderMemory.Start");
+        extern void* Start;
         /// @brief Holds the current location of the memory to be used by the bootloader
-        extern void* Offset asm("DivaOS.Loader.Memory.LoaderMemory.Offset");
+        extern void* Offset;
         /// @brief Holds the maximum of the location of the memory to be used by the bootloader
-        extern void* End asm("DivaOS.Loader.Memory.LoaderMemory.End");
+        extern void* End;
     }
 
     void* Acquire(u64 size, u8 alignment)
@@ -27,10 +25,12 @@ namespace DivaOS::Loader::Memory::LoaderMemory {
         void* end = start + padding + size;
         //Ensure the requested size doesn't overflow any boundaries
         if (end >= End || end < start){
-            Loader::Crash("Out of Loader Memory!");
+            //Loader::Crash("Out of Loader Memory!");
+            //TODO: crash
+            while (true);
         }
         //Offset the start address for future memory chunk acquisitions
         Offset = end;
         return start + padding;
-    }
+    }*/
 }

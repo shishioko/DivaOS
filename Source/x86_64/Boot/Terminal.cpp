@@ -1,10 +1,9 @@
-#include "Peripherals/Terminal.hpp"
-
-#include "Loader.hpp"
+#include "Boot/Terminal.hpp"
 
 namespace DivaOS::Loader::Peripherals::Terminal {
     namespace
     {
+        /*
         /// @brief The encoded character format in the BIOS provided VGA text mode framebuffer
         struct VGACharacter{
             /// @brief The displayed ASCII character
@@ -75,7 +74,9 @@ namespace DivaOS::Loader::Peripherals::Terminal {
         }
         static inline v VGACharacter* CalculateAddress(const u16 x, const u16 y){
             if (x > Width || y > Height) {
-                Loader::Crash("Tried to access framebuffer out of bounds");
+                //Loader::Crash("Tried to access framebuffer out of bounds");
+                //TODO: crash
+                while (true);
             }
             return &VGA[y * Width + x];
         }
@@ -85,8 +86,8 @@ namespace DivaOS::Loader::Peripherals::Terminal {
         //Iterate the characters until encountering a null terminator
         for (u64 i = 0; text[i] != '\0'; i++) {
             //Write the individual character to the terminal
-            u8 c = text[i];
-            Write(c);
+            const t8 c = text[i];
+            Write(&c); //TODO: is this right? the & part
         }
     }
     void Write(const t8 character){
@@ -150,6 +151,6 @@ namespace DivaOS::Loader::Peripherals::Terminal {
                 }
                 break;
             }
-        }
+        }*/
     }
 }
