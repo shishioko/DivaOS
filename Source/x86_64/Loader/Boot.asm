@@ -199,7 +199,7 @@ DivaOS.Loader.Loader.Paging:
         %endrep
         %pop
 DivaOS.Loader.Loader.GDTR:
-    dw 0x0027 ;Size including nulldescriptor - 1
+    dw (DivaOS.Loader.Loader.GDT.End - 1) ;Size including nulldescriptor - 1
     dq DivaOS.Loader.Loader.GDT ;Base Address including nulldescriptor
 DivaOS.Loader.Loader.GDT:
     DivaOS.Loader.Loader.GDT.Null equ $ - DivaOS.Loader.Loader.GDT
@@ -235,6 +235,7 @@ DivaOS.Loader.Loader.GDT:
         db 0b10010010 ;Permissions and Type: Present, Privileges(2), NotSystem, Type(Ex, Di, RW), Accessed
         db 0xF + (0b1010 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
         db 0x00 ;Start: 0x00______
+    DivaOS.Loader.Loader.GDT.End equ $ - DivaOS.Loader.Loader.GDT
 
 DivaOS.Loader.Loader.Message.NoProtectedMode: db "Protected mode not supported!", 0x00
 DivaOS.Loader.Loader.Message.NoCpuid: db "CPUID not supported!", 0x00
