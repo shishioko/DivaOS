@@ -34,9 +34,9 @@ namespace DivaOS::Loader::Memory::Map {
 
         //Organize the areas' boundaries into standalone boundary entries
         u64 rawEntries = E820MemoryMapLength * 2;
-        void** rawEntriesAddress = (void**)LoaderMemory::Acquire(sizeof(void*) * rawEntries);
-        bool* rawEntriesUsable = (bool*)LoaderMemory::Acquire(sizeof(bool) * rawEntries);
-        bool* rawEntriesStart = (bool*)LoaderMemory::Acquire(sizeof(bool) * rawEntries);
+        void** rawEntriesAddress = new void*[rawEntries];
+        bool* rawEntriesUsable = new bool[rawEntries];
+        bool* rawEntriesStart = new bool[rawEntries];
         for (u64 i = 0; i < E820MemoryMapLength; i++){
             E820MemoryMapEntry entry = E820MemoryMap[i];
             bool usable = entry.Type == 1;
@@ -76,7 +76,7 @@ namespace DivaOS::Loader::Memory::Map {
             if (sorted <= 0) break;
         }
         //Process which entries form usable areas
-        AddressRange* processedEntriesRange = (AddressRange*)LoaderMemory::Acquire(sizeof(AddressRange) * rawEntries);
+        AddressRange* processedEntriesRange = new AddressRange[rawEntries];
         u64 processedEntries = 0;
         {
             s64 currentUsableScore = 0;

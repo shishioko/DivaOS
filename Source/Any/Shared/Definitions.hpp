@@ -2,30 +2,29 @@
 
 #define null nullptr
 
-using t8  = char;
+typedef bool u1;
 
-using u1  = bool;
+typedef unsigned char u8 __attribute__((mode(QI)));
+typedef signed char s8 __attribute__((mode(QI)));
+typedef char t8;
 
-using u8  = unsigned char;
-using s8  = signed char;
+typedef unsigned short u16 __attribute__((mode(HI)));
+typedef signed short s16 __attribute__((mode(HI)));
+typedef short t16;
 
-using u16 = unsigned short;
-using s16 = signed short;
+typedef unsigned int u32 __attribute__((mode(SI)));
+typedef signed int s32 __attribute__((mode(SI)));
+typedef int t32;
 
-using u32 = unsigned int;
-using s32 = signed int;
+typedef unsigned long u64 __attribute__((mode(DI)));
+typedef signed long s64 __attribute__((mode(DI)));
 
-using u64 = unsigned long long;
-using s64 = signed long long;
+typedef unsigned long long u128 __attribute__((mode(TI)));
+typedef signed long long s128 __attribute__((mode(TI)));
 
-using f32 = float;
-using f64 = double;
-using f80 = long double;
+typedef float f32 __attribute__((mode(SF)));
+typedef double f64 __attribute__((mode(DF)));
+typedef long double f80 __attribute__((mode(XF)));
+typedef long double f128 __attribute__((mode(TF)));
 
 #define v volatile
-
-#ifdef __SIZEOF_INT128__
-using u128 = unsigned __int128;
-using s128 = __int128;
-#endif
-using f128 = _Float128;

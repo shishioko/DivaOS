@@ -1,5 +1,7 @@
 #include "Loader.hpp"
 
+#include "Memory/Map.hpp"
+
 namespace DivaOS::Loader::Loader {
     void Main()
     {
@@ -15,4 +17,17 @@ namespace DivaOS::Loader::Loader {
         Peripherals::Terminal::Write(text);
         while (true);
     }
+}
+
+void* operator new(u64 size){
+    return DivaOS::Loader::Memory::LoaderMemory::Acquire(size);
+}
+void* operator new[](u64 size){
+    return DivaOS::Loader::Memory::LoaderMemory::Acquire(size);
+}
+void operator delete(void* ptr, u64 size) noexcept{
+    //unsupported
+}
+void operator delete[](void* ptr, u64 size) noexcept{
+    //unsupported
 }
