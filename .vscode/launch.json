@@ -9,16 +9,19 @@
         "miDebuggerServerAddress": "localhost:3333",
         "cwd": "${workspaceFolder}/",
         "setupCommands": [{
-            "description": "Load kernel symbols",
-            "text": "add-symbol-file ${workspaceFolder}/Build/Kernel.sym",
+            "text": "set target-async on",
             "ignoreFailures": false
         }],
+        "hardwareBreakpoints": {
+            "require": true,
+        },
 
         "stopAtEntry": false,
         "externalConsole": true,
         
         "request": "launch",
-        "program": "${workspaceFolder}/Build/Loader.sym",
+        "program": "${workspaceFolder}/Build/Kernel.sym",
+        "targetArchitecture": "x86_64",
 
         "preLaunchTask": "Start Debugging (QEMU, GDB)",
         "postDebugTask": "Stop Debugging (QEMU, GDB)"

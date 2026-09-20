@@ -1,8 +1,13 @@
 #!/bin/bash
 
-DISK_SIZE=2G
+DISK_SIZE=270M
 EFI_PARTITION_SIZE=64M
-DATA_PARTITION_SIZE=1G
+DATA_PARTITION_SIZE=192M
+
+#Process Parameters
+DISK_SIZE_BLOCKS=$(($(echo "$DISK_SIZE" | numfmt --from=iec) / 512))
+EFI_PARTITION_SIZE_BLOCKS=$(($(echo "$EFI_PARTITION_SIZE" | numfmt --from=iec) / 512))
+DATA_PARTITION_SIZE_BLOCKS=$(($(echo "$DATA_PARTITION_SIZE" | numfmt --from=iec) / 512))
 
 #Initialize Script
 set -e
@@ -17,50 +22,54 @@ fi
 rm -rf ./{Build,Artifacts}/*
 mkdir -p ./{Source,Build,Artifacts}
 
-cd ./Build/
-
 #Compile and link kernel
-g++ -mcmodel=kernel -ffreestanding -fno-exceptions -fno-rtti -fno-pic -fno-pie -mno-red-zone -Wno-pointer-arith -masm=intel $CPP_FLAGS -g3 -c  -I ../Source/x86_64/Kernel/ $(printf -- '-I %s ' ../Source/{x86_64,Any}/{Kernel,Shared}/) $(printf -- '-I %s ' ../Source/{x86_64,Any}/{Kernel,Shared}/) $(find ../Source/{x86_64,Any}/{Kernel,Shared}/ -name "*.cpp")
-ld  -m elf_x86_64 -T ../Scripts/Kernel.ld -Map=./Kernel.map --oformat elf64-x86-64 -o ./Kernel.elf ./*.o
-objcopy --only-keep-debug ./Kernel.elf ./Kernel.sym
-objcopy --strip-debug ./Kernel.elf
-objcopy -O binary ./Kernel.elf ./Kernel.bin
-rm -f ./*.o
+cd ./Build/
+g++ -m64 -no-pie -mcmodel=kernel -ffreestanding -fno-exceptions -fno-rtti -fno-pic -fno-pie -mno-red-zone -nostdlib -Wno-pointer-arith -masm=intel $CPP_FLAGS -g3 -c -I ../Source/x86_64/ $(printf -- '-isystem %s ' ../Libraries/{x86_64,Any}/) $(printf -- '-I %s ' ../Source/{x86_64,Any}/) $(find ../Libraries/{x86_64,Any}/ -name "*.cpp") $(find ../Source/{x86_64,Any}/ -name "*.cpp")
+gcc -m64 -no-pie -mcmodel=kernel -ffreestanding -fno-exceptions -fno-pic -fno-pie -mno-red-zone -nostdlib -Wno-pointer-arith -masm=intel $CPP_FLAGS -g3 -c -I ../Source/x86_64/ $(printf -- '-isystem %s ' ../Libraries/{x86_64,Any}/) $(printf -- '-I %s ' ../Source/{x86_64,Any}/) $(find ../Libraries/{x86_64,Any}/ -name "*.c") $(find ../Source/{x86_64,Any}/ -name "*.c")
+cd ../
+ld -m elf_x86_64 -no-pie -T ./Scripts/Linker.ld --oformat elf64-x86-64 -e DivaOS.Boot.Main -o ./Build/Kernel.elf ./Build/*.o
+objcopy --only-keep-debug ./Build/Kernel.elf ./Build/Kernel.sym
+objcopy --strip-debug ./Build/Kernel.elf
 
-#Assemble and link loader
-g++ -mcmodel=small -ffreestanding -fno-exceptions -fno-rtti -fno-pic -fno-pie -mno-red-zone -Wno-pointer-arith -masm=intel $CPP_FLAGS -g3 -c -I ../Source/x86_64/Loader/ $(printf -- '-I %s ' ../Source/{x86_64,Any}/{Loader,Shared}/) $(find ../Source/{x86_64,Any}/{Loader,Shared}/ -name "*.cpp")
-cd ..
-nasm -f elf64 -g -F dwarf -o ./Build/Loader.asm.o $(printf -- '-I %s ' ./Source/{x86_64,Any}/{Loader,Shared}/) ./Source/Any/Loader/Main.asm
-cd ./Build
-ld -m elf_x86_64 -T ../Scripts/Loader.ld -Map=./Loader.map --oformat elf64-x86-64 -o ./Loader.elf ./*.o
-objcopy --only-keep-debug ./Loader.elf ./Loader.sym
-objcopy --strip-debug ./Loader.elf
-objcopy -O binary ./Loader.elf ./Loader.bin
-rm -f ./*.o
+#Download Limine Bootloader
+wget -q --show-progress -P ./Build/ https://github.com/Limine-Bootloader/Limine/releases/latest/download/limine-binary.tar.gz
+mkdir ./Build/limine-binary/
+tar --strip-components=1 -C ./Build/limine-binary -xf ./Build/limine-binary.tar.gz
+cd ./Build/limine-binary/
+make
+cd ../../
 
 #Produce EFI Partition
 {
     #Collect files for EFI partition
-    mkdir -p ./EFI.fs
-    cp ./Kernel.elf ./EFI.fs/Kernel.elf
+    mkdir -p ./Build/EFI.fs/{EFI/BOOT,boot/{limine,DivaOS}}
+    cp ./Build/limine-binary/BOOTX64.EFI ./Build/EFI.fs/EFI/BOOT/BOOTX64.EFI
+    cp ./Build/limine-binary/BOOTIA32.EFI ./Build/EFI.fs/EFI/BOOT/BOOTIA32.EFI
+    cp ./Build/limine-binary/limine-bios.sys ./Build/EFI.fs/boot/limine/limine-bios.sys
+    cp ./Build/Kernel.elf ./Build/EFI.fs/boot/DivaOS/Kernel.elf
+	cat <<- 'EOF' > ./Build/EFI.fs/boot/limine/limine.conf
+		timeout: 0
+
+		/DivaOS
+		    protocol: limine
+		    path: boot():/boot/DivaOS/Kernel.elf
+            kaslr: no
+	EOF
     #Build EFI partition
-    EFI_PARTITION_RESERVED=$(( (( $(stat -c%s "./Loader.bin") + 511) / 512) + 3 ))
-    if [ $EFI_PARTITION_RESERVED -lt 32 ]; then
-        EFI_PARTITION_RESERVED=32
-    fi
-    truncate -s $EFI_PARTITION_SIZE ./EFI.img
-    /usr/sbin/mkfs.vfat -F 32 -R $EFI_PARTITION_RESERVED -n "DIVAOS_EFI" ./EFI.img >/dev/null
-    dd if=./Loader.bin of=./EFI.img bs=512 skip=1 seek=3 count=$EFI_PARTITION_RESERVED conv=notrunc status=none
-    dd if=./Loader.bin of=./EFI.img bs=1 count=3 conv=notrunc status=none
-    dd if=./Loader.bin of=./EFI.img bs=1 skip=90 seek=90 count=422 conv=notrunc status=none
-    mcopy -i ./EFI.img -s ./EFI.fs/* ::/
+    truncate -s "$((EFI_PARTITION_SIZE_BLOCKS*512))" ./Build/EFI.img
+    /usr/sbin/mkfs.vfat -F 32 -n "DIVA_LIMINE" ./Build/EFI.img >/dev/null
+    mcopy -o -i ./Build/EFI.img -s ./Build/EFI.fs/* ::/
 }
 
 #Produce Disk Image
-truncate -s $DISK_SIZE ./Disk.img
-dd if=./EFI.img of=./Disk.img bs=512 seek=2048 conv=notrunc status=none
-dd if=/usr/lib/syslinux/mbr/mbr.bin of=./Disk.img bs=446 count=1 conv=notrunc status=none
-echo ",,0x0C,*" | /usr/sbin/sfdisk ./Disk.img > /dev/null
-mv ./Disk.img ../Artifacts/Disk.img
+truncate -s "$((DISK_SIZE_BLOCKS*512))" ./Build/Disk.img
+/usr/sbin/sgdisk --clear
+/usr/sbin/sgdisk --new=1:2048:4095 --typecode=1:ef02 --change-name=1:"BIOS Boot Partition" ./Build/Disk.img
+/usr/sbin/sgdisk --new=2:4096:+"$EFI_PARTITION_SIZE_BLOCKS" --typecode=2:ef00 --change-name=2:"EFI System Partition" ./Build/Disk.img
+/usr/sbin/sgdisk --attributes=1:set:2 ./Build/Disk.img
+/usr/sbin/sgdisk --hybrid 1:2 ./Build/Disk.img
+./Build/limine-binary/limine bios-install ./Build/Disk.img 1
+dd status=none conv=notrunc seek=4096 obs=512 of=./Build/Disk.img ibs=1M if=./Build/EFI.img
 
-cd ..
+#Export Artifacts
+mv ./Build/Disk.img ./Artifacts/Disk.img

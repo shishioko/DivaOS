@@ -1,7 +1,7 @@
 #pragma once
 #include "Definitions.hpp"
 
-namespace DivaOS::Loader::Memory {
+namespace DivaOS::Shared::Memory {
     /// @brief Describes a memory address range
     struct AddressRange{
         /// @brief Used to indicate the absence of a ``AddressRange``, such as for the termination of lists

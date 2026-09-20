@@ -1,6 +1,6 @@
-#include "Memory/AddressRange.hpp"
+#include "Shared/Memory/AddressRange.hpp"
 
-namespace DivaOS::Loader::Memory {
+namespace DivaOS::Shared::Memory {
     const AddressRange AddressRange::Null = AddressRange();
 
     AddressRange::AddressRange(){

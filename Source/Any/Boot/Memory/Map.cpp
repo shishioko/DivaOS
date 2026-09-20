@@ -1,47 +1,31 @@
-#include "Memory/Map.hpp"
+#include "Map.hpp"
 
-#include "Memory/LoaderMemory.hpp"
-
-#include "Peripherals/Terminal.hpp"
-
-namespace DivaOS::Loader::Memory::Map {
+namespace DivaOS::Boot::Memory::Map
+{
     namespace{
-        /// @brief Contains data about an address range fetched from the E820 memory map in real mode
-        struct E820MemoryMapEntry{
-            /// @brief Start of the address range
-            const void* Start;
-            /// @brief size of the address range
-            const u64 Size;
-            /// @brief Type of the address range
-            /// @ref https://uefi.org/htmlspecs/ACPI_Spec_6_4_html/15_System_Address_Map_Interfaces/Sys_Address_Map_Interfaces.html
-            const u32 Type;
-            /// @brief 
-            /// @ref https://uefi.org/htmlspecs/ACPI_Spec_6_4_html/15_System_Address_Map_Interfaces/int-15h-e820h---query-system-address-map.html
-            const u32 Attributes;
-            E820MemoryMapEntry() = delete;
+        __attribute__((used, section(".limine_requests")))
+        static volatile struct limine_memmap_request MapRequest = {
+            .id = LIMINE_MEMMAP_REQUEST_ID,
+            .revision = 0,
         };
 
-        /// @brief Holds the amount of entries in the fetched memory map
-        extern u64 E820MemoryMapLength asm("DivaOS.Loader.Memory.Map.Length");
-        /// @brief Holds the pointer to the first entry of the fetched memory map
-        extern E820MemoryMapEntry* E820MemoryMap asm("DivaOS.Loader.Memory.Map.Start");
-
-        AddressRange* Cached = null;
+        Shared::Memory::AddressRange* Cached = null;
     }
-    AddressRange* Get(){
+    Shared::Memory::AddressRange* Get(){
         //Return the cached pointer if it exists
         if (Cached != null) return Cached;
-
+        //
+        if (MapRequest.response == null) Boot::Crash("Memory Map not provided by bootloader!");
         //Organize the areas' boundaries into standalone boundary entries
-        u64 rawEntries = E820MemoryMapLength * 2;
+        u64 rawEntries = MapRequest.response->entry_count * 2;
         void** rawEntriesAddress = new void*[rawEntries];
         bool* rawEntriesUsable = new bool[rawEntries];
         bool* rawEntriesStart = new bool[rawEntries];
-        for (u64 i = 0; i < E820MemoryMapLength; i++){
-            E820MemoryMapEntry entry = E820MemoryMap[i];
-            bool usable = entry.Type == 1;
-            rawEntriesAddress[i * 2] = (void*)entry.Start;
-            rawEntriesAddress[i * 2 + 1] = (void*)(entry.Start + entry.Size);
+        for (u64 i = 0; i < MapRequest.response->entry_count; i++){
+            limine_memmap_entry* entry = MapRequest.response->entries[i];
+            bool usable = entry->type == LIMINE_MEMMAP_USABLE;
+            rawEntriesAddress[i * 2] = (void*)entry->base;
+            rawEntriesAddress[i * 2 + 1] = (void*)(entry->base + entry->length);
             rawEntriesUsable[i * 2] = usable;
             rawEntriesUsable[i * 2 + 1] = usable;
             rawEntriesStart[i * 2] = true;
@@ -76,7 +60,7 @@ namespace DivaOS::Loader::Memory::Map {
             if (sorted <= 0) break;
         }
         //Process which entries form usable areas
-        AddressRange* processedEntriesRange = new AddressRange[rawEntries];
+        Shared::Memory::AddressRange* processedEntriesRange = new Shared::Memory::AddressRange[rawEntries];
         u64 processedEntries = 0;
         {
             s64 currentUsableScore = 0;
@@ -107,7 +91,7 @@ namespace DivaOS::Loader::Memory::Map {
                 }
             }
             //Set the last entry to terminate the list
-            processedEntriesRange[processedEntries] = AddressRange::Null;
+            processedEntriesRange[processedEntries] = Shared::Memory::AddressRange::Null;
         }
         //Set the cached pointer and return
         return Cached = processedEntriesRange;
