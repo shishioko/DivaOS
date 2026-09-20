@@ -6,6 +6,12 @@ SECTIONS
 
     . = ALIGN(0x1000); 
     .text : {
+        *(.limine_requests)
+        *(.limine_requests.*)
+    }
+
+    . = ALIGN(0x1000); 
+    .text : {
         *(.text)
         *(.text.*)
     }

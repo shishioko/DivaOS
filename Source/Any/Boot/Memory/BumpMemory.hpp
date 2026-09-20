@@ -1,8 +1,10 @@
 #pragma once
 #include "Definitions.hpp"
 
+#include "Boot/Main.hpp"
+
 /// @brief Contains basic methods to manage physical memory during bootup
-namespace DivaOS::Boot::LoaderMemory {
+namespace DivaOS::Boot::Memory::BumpMemory {
     /// @brief Used to permanently acquire a contiguous physical chunk of memory.
     /// @param size The size of the chunk to be acquired
     /// @param alignment The amounts of bits the address of the chunk has to be aligned to

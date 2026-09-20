@@ -4,10 +4,10 @@
 #include <Limine/limine.h>
 #include <Flanterm/flanterm_backends/fb.h>
 
-#include "Main.hpp"
+#include "Boot/Main.hpp"
 
 /// @brief Contains basic methods to output to a graphical terminal during bootup
-namespace DivaOS::Boot::Terminal {
+namespace DivaOS::Boot::Peripherals::Terminal {
     
     /// @brief Used to initialize the internal context of the terminaal
     /// @note Must be called before calling any other method

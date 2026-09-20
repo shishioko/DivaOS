@@ -1,8 +1,8 @@
 #!/bin/bash
 
-DISK_SIZE=1G
-EFI_PARTITION_SIZE=256M
-DATA_PARTITION_SIZE=512M
+DISK_SIZE=270M
+EFI_PARTITION_SIZE=64M
+DATA_PARTITION_SIZE=192M
 
 #Process Parameters
 DISK_SIZE_BLOCKS=$(($(echo "$DISK_SIZE" | numfmt --from=iec) / 512))
@@ -66,6 +66,8 @@ truncate -s "$((DISK_SIZE_BLOCKS*512))" ./Build/Disk.img
 /usr/sbin/sgdisk --clear
 /usr/sbin/sgdisk --new=1:2048:4095 --typecode=1:ef02 --change-name=1:"BIOS Boot Partition" ./Build/Disk.img
 /usr/sbin/sgdisk --new=2:4096:+"$EFI_PARTITION_SIZE_BLOCKS" --typecode=2:ef00 --change-name=2:"EFI System Partition" ./Build/Disk.img
+/usr/sbin/sgdisk --attributes=1:set:2 ./Build/Disk.img
+/usr/sbin/sgdisk --hybrid 1:2 ./Build/Disk.img
 ./Build/limine-binary/limine bios-install ./Build/Disk.img 1
 dd status=none conv=notrunc seek=4096 obs=512 of=./Build/Disk.img ibs=1M if=./Build/EFI.img
 

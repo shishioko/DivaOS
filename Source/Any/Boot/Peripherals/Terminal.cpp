@@ -1,8 +1,9 @@
-#include "Boot/Terminal.hpp"
+#include "Boot/Peripherals/Terminal.hpp"
 
-namespace DivaOS::Boot::Terminal {
+namespace DivaOS::Boot::Peripherals::Terminal {
     namespace
     {
+        __attribute__((used, section(".limine_requests"))) 
         /// @brief Requests a framebuffer from the Limine Bootloader
         static volatile limine_framebuffer_request FramebufferRequest = {
             .id = LIMINE_FRAMEBUFFER_REQUEST_ID,
