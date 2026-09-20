@@ -12,6 +12,8 @@ namespace DivaOS::Loader::Memory {
         /// @brief The exclusive end address of the ``AddressRange``
         const void* End;
 
+        /// @brief Constructs a new instance of ``AddressRange```
+        AddressRange();
         /// @brief Constructs a new instance of ``AddressRange``
         /// @param start The start address of the ``AddressRange``
         /// @param end The exclusive end address of the ``AddressRange``

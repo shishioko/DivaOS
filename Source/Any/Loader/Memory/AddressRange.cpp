@@ -1,10 +1,14 @@
 #include "Memory/AddressRange.hpp"
 
 namespace DivaOS::Loader::Memory {
-    const AddressRange AddressRange::Null = AddressRange(null, null);
+    const AddressRange AddressRange::Null = AddressRange();
 
+    AddressRange::AddressRange(){
+        Start = null;
+        End = null;
+    }
     AddressRange::AddressRange(const void* start, const void* end){
-        this->Start = start;
+        Start = start;
         End = end;
     }
 
