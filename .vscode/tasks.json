@@ -4,20 +4,19 @@
         {
             "label": "Build All",
             "type": "shell",
-            "command": "${workspaceFolder}/Scripts/Build.sh",
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "command": "${workspaceFolder}/Scripts/Build.sh",
         },
         {
             "label": "Execute",
             "type": "shell",
+            "dependsOn": [
+                "Build All",
+            ],
             "command": "${workspaceFolder}/Scripts/Execute.sh",
-            "group": {
-                "kind": "none",
-                "isDefault": false
-            },
             "isBackground": true, 
             "problemMatcher": {
                 "background": {
@@ -31,6 +30,9 @@
         {
             "label": "Start Debugging (QEMU, GDB)",
             "type": "shell",
+            "dependsOn": [
+                "Build All",
+            ],
             "command": "${workspaceFolder}/Scripts/Execute.sh -gdb tcp::3333 -S",
             "isBackground": true, 
             "problemMatcher": {
