@@ -1,0 +1,59 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build All",
+            "type": "shell",
+            "command": "${workspaceFolder}/Scripts/Build.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Execute",
+            "type": "shell",
+            "command": "${workspaceFolder}/Scripts/Execute.sh",
+            "group": {
+                "kind": "none",
+                "isDefault": false
+            },
+            "isBackground": true, 
+            "problemMatcher": {
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".",
+                    "endsPattern": "."
+                },
+                "pattern": { "regexp": "." }
+            }
+        },
+        {
+            "label": "Start Debugging (QEMU, GDB)",
+            "type": "shell",
+            "command": "${workspaceFolder}/Scripts/Execute.sh -gdb tcp::3333 -S",
+            "isBackground": true, 
+            "problemMatcher": {
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".",
+                    "endsPattern": "."
+                },
+                "pattern": { "regexp": "." }
+            }
+        },
+        {
+            "label": "Stop Debugging (QEMU, GDB)",
+            "type": "shell",
+            "command": "echo ${input:terminate}",
+        }
+    ],
+    "inputs": [
+        {
+          "id": "terminate",
+          "type": "command",
+          "command": "workbench.action.tasks.terminate",
+          "args": "terminateAll"
+        }
+    ]
+}
