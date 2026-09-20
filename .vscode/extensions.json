@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cpp-devtools",
+        "ms-vscode.cpptools-extension-pack",
+        "zatkins-dev.doxdocgen-with-direction",
+        "ms-vscode.hexeditor",
+        "doinkythederp.nasm-language-support",
+        "furkansalk.qemu-gdb-debug"
+    ]
+}
