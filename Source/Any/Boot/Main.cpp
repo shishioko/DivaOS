@@ -1,19 +1,21 @@
 #include "Boot/Main.hpp"
 
-namespace DivaOS::Boot {
+#include "Boot/Memory/Map.hpp"
+#include "Shared/Memory/AddressRange.hpp"
 
+namespace DivaOS::Boot {
     void Main(){
-        if (!Terminal::Initialize()){
+        if (!Peripherals::Terminal::Initialize()){
             Boot::Crash();
         }
-        Terminal::WriteLine("Hello, Diva!!!");
+        Peripherals::Terminal::WriteLine("Hello, Diva!!!");
+        Peripherals::Terminal::WriteLine("I was booted by Limine Bootloader.");
+        
+        Peripherals::Terminal::WriteLine("<3");
+
         while (true);
     }
 
-    void Crash(t8* text){
-        Terminal::WriteLine(text);
-        Crash();
-    }
     void Crash(){
         asm volatile(R"(
             cli
@@ -22,20 +24,24 @@ namespace DivaOS::Boot {
         )");
         while (true);
     }
+    void Crash(const t8* text){
+        Peripherals::Terminal::WriteLine(text);
+        Crash();
+    }
 }
 
-/*void* operator new(u64 size){
-    return DivaOS::Boot::LoaderMemory::Acquire(size);
+void* operator new(u64 size){
+    return DivaOS::Boot::Memory::BumpMemory::Acquire(size);
 }
 void* operator new[](u64 size){
-    return DivaOS::Boot::LoaderMemory::Acquire(size);
+    return DivaOS::Boot::Memory::BumpMemory::Acquire(size);
 }
 void operator delete(void* ptr, u64 size) noexcept{
     //unsupported
 }
 void operator delete[](void* ptr, u64 size) noexcept{
     //unsupported
-}*/
+}
 
 void* memset(void* destination, int value, u64 count) {
     u8* pointer = (u8*)destination;
