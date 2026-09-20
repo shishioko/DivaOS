@@ -1,2 +1,2 @@
 #!/bin/bash
-qemu-system-x86_64 -accel tcg -cpu core2duo -m 1024 -drive format=raw,file=./Artifacts/Disk.img,media=disk -smp 8 -vga std -monitor stdio -no-reboot -no-shutdown -d unimp,guest_errors "$@"
+qemu-system-x86_64 -enable-kvm -cpu host -machine q35 -d int,cpu_reset -m 1024 -drive format=raw,file=./Artifacts/Disk.img,media=disk -smp 8 -vga std -monitor stdio -no-reboot -no-shutdown -d unimp,guest_errors "$@"

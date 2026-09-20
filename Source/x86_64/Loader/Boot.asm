@@ -6,6 +6,11 @@
 ; Entry point of the stage 2 bootloader
 ; Initializes and enters protected mode
 DivaOS.Loader.Loader.Entry16:
+    ;Initialize Stack
+    mov ax, 0x0000
+    mov ss, ax
+    mov sp, 0x7000
+
     ;Enable address bit 20
     mov dx, 0x0092
     in al, dx
@@ -45,14 +50,13 @@ DivaOS.Loader.Loader.Entry16:
     or al, 0x01
     mov cr0, eax
     ;Enter protected mode
-    jmp DivaOS.Loader.Loader.GDTR.Code32:DivaOS.Loader.Loader.Entry32
+    jmp DivaOS.Loader.Loader.GDT.Code32:DivaOS.Loader.Loader.Entry32
 
 [bits 32]
 ; Initializes and enters long mode
 DivaOS.Loader.Loader.Entry32:
     ;Initialize execution
-    mov esp, 0x00007000
-    mov ax, DivaOS.Loader.Loader.GDTR.Data32
+    mov ax, DivaOS.Loader.Loader.GDT.Data32
     mov ds, ax
     mov ss, ax
     mov gs, ax
@@ -125,7 +129,7 @@ DivaOS.Loader.Loader.Entry32:
     mov cr0, eax
 
     ;Enter long mode
-    jmp DivaOS.Loader.Loader.GDTR.Code64:DivaOS.Loader.Loader.Entry64
+    jmp DivaOS.Loader.Loader.GDT.Code64:DivaOS.Loader.Loader.Entry64
 
     ; Prints an error message and halts execution
     ; Input: esi = Pointer to messaage to be printed
@@ -149,7 +153,7 @@ DivaOS.Loader.Loader.Entry32:
 ; Initializes and enters C++ provided code
 DivaOS.Loader.Loader.Entry64:
     ;Initialize registers
-    mov ax, DivaOS.Loader.Loader.GDTR.Data64
+    mov ax, DivaOS.Loader.Loader.GDT.Data64
     mov ds, ax
     mov es, ax
     mov gs, ax
@@ -183,22 +187,24 @@ DivaOS.Loader.Loader.Paging:
         dq DivaOS.Loader.Loader.Paging.PML2 + 00000011b ;R/W, Present
         times 511 dq 0x0000000000000000
     DivaOS.Loader.Loader.Paging.PML2:
-        dq 0x0000000000000000 + 10000011b ;2MB Pages, R/W, Present
+        dq DivaOS.Loader.Loader.Paging.PML1 + 00000011b ;R/W, Present
         times 511 dq 0x0000000000000000
-    DivaOS.Loader.Loader.Paging.PML1.High:
+    DivaOS.Loader.Loader.Paging.PML1:
+        ;Could use 2MB Pages but that would mess with caching, apparently
         %push
-        %assign Offset 0x0000000000018000
+        %assign Offset 0x0000000000000000
         %rep 512
             dq Offset + 00000011b ; R/W, Present
             %assign Offset Offset + 0x1000
         %endrep
         %pop
-
 DivaOS.Loader.Loader.GDTR:
-    dw 0x003f ;Size including nulldescriptor - 1
-    dq $ ;Base Address including nulldescriptor
-
-    DivaOS.Loader.Loader.GDTR.Code32 equ $ - DivaOS.Loader.Loader.GDTR - 2
+    dw (DivaOS.Loader.Loader.GDT.End - 1) ;Size including nulldescriptor - 1
+    dq DivaOS.Loader.Loader.GDT ;Base Address including nulldescriptor
+DivaOS.Loader.Loader.GDT:
+    DivaOS.Loader.Loader.GDT.Null equ $ - DivaOS.Loader.Loader.GDT
+        dq 0x0000000000000000
+    DivaOS.Loader.Loader.GDT.Code32 equ $ - DivaOS.Loader.Loader.GDT
         dw 0xFFFF ;Size: 0x_0000
         dw 0x0000 ;Start: 0x____0000
         db 0x00 ;Start: 0x__00____
@@ -206,7 +212,7 @@ DivaOS.Loader.Loader.GDTR:
         db 0xF + (0b1100 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
         db 0x00 ;Start: 0x00______
 
-    DivaOS.Loader.Loader.GDTR.Data32 equ $ - DivaOS.Loader.Loader.GDTR - 2
+    DivaOS.Loader.Loader.GDT.Data32 equ $ - DivaOS.Loader.Loader.GDT
         dw 0xFFFF ;Size: 0x_0000
         dw 0x0000 ;Start: 0x____0000
         db 0x00 ;Start: 0x__00____
@@ -214,21 +220,22 @@ DivaOS.Loader.Loader.GDTR:
         db 0xF + (0b1100 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
         db 0x00 ;Start: 0x00______
 
-    DivaOS.Loader.Loader.GDTR.Code64 equ $ - DivaOS.Loader.Loader.GDTR - 2
+    DivaOS.Loader.Loader.GDT.Code64 equ $ - DivaOS.Loader.Loader.GDT
         dw 0xFFFF ;Size: 0x_0000
         dw 0x0000 ;Start: 0x____0000
         db 0x00 ;Start: 0x__00____
         db 0b10011010 ;Permissions and Type: Present, Privileges(2), NotSystem, Type(Ex, Di, RW), Accessed
-        db 0xF + (0b1110 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
+        db 0xF + (0b1010 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
         db 0x00 ;Start: 0x00______
 
-    DivaOS.Loader.Loader.GDTR.Data64 equ $ - DivaOS.Loader.Loader.GDTR - 2
+    DivaOS.Loader.Loader.GDT.Data64 equ $ - DivaOS.Loader.Loader.GDT
         dw 0xFFFF ;Size: 0x_0000
         dw 0x0000 ;Start: 0x____0000
         db 0x00 ;Start: 0x__00____
         db 0b10010010 ;Permissions and Type: Present, Privileges(2), NotSystem, Type(Ex, Di, RW), Accessed
-        db 0xF + (0b1110 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
+        db 0xF + (0b1010 << 4) ;Size: 0x0____ and Additional: Size*=(0=1,1=4096), ProtectedMode, LongMode, Reserved
         db 0x00 ;Start: 0x00______
+    DivaOS.Loader.Loader.GDT.End equ $ - DivaOS.Loader.Loader.GDT
 
 DivaOS.Loader.Loader.Message.NoProtectedMode: db "Protected mode not supported!", 0x00
 DivaOS.Loader.Loader.Message.NoCpuid: db "CPUID not supported!", 0x00
